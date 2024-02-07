@@ -1,6 +1,6 @@
 from enum import Enum
 
-from aenum import StrEnum
+from aenum import StrEnum  # type: ignore
 
 
 class AnalysisModelType(StrEnum):  # type: ignore
