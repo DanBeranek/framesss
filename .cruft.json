@@ -1,0 +1,30 @@
+{
+  "template": "https://github.com/statisticsnorway/ssb-pypitemplate.git",
+  "commit": "e81154758223bbeb62e2117de27029295c13e126",
+  "checkout": "2024.1.26",
+  "context": {
+    "cookiecutter": {
+      "project_name": "framesss",
+      "package_name": "framesss",
+      "friendly_name": "framesss",
+      "copyright_owner": "Daniel Beranek",
+      "copyright_year": "2024",
+      "author": "Daniel Beranek",
+      "email": "daniel.beraanek@gmail.com",
+      "github_organization": "DanBeranek",
+      "version": "0.0.0",
+      "license": "MIT",
+      "development_status": "Development Status :: 2 - Pre-Alpha",
+      "code_quality_level": "Medium",
+      "_copy_without_render": [
+        "*.rst_t"
+      ],
+      "_jinja2_env_vars": {
+        "lstrip_blocks": true,
+        "trim_blocks": true
+      },
+      "_template": "https://github.com/statisticsnorway/ssb-pypitemplate.git"
+    }
+  },
+  "directory": null
+}
