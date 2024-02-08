@@ -69,7 +69,7 @@ class Node:
         )
 
     def validate_fixity(
-        self, fixity: SupportFixity | str
+        self, fixity: list[SupportFixity] | list[str]
     ) -> list[SupportFixity] | list[str] | ValueError:
         """
         Validate the fixity conditions provided for a node.
@@ -87,11 +87,13 @@ class Node:
                 f"Fixity at node '{self.label}' must have 6 elements. Got {len(fixity)} elements."
             )
 
+        valid_fixities = [fix.value for fix in SupportFixity]
+
         for i, fix in enumerate(fixity):
-            if fix not in [fixity.value for fixity in SupportFixity]:
+            if fix not in valid_fixities:
                 raise ValueError(
                     f"Invalid fixity: '{fix}' for the node: '{self.label}' at the index {i}\n"
-                    f"Valid fixities are: {[sf.value for sf in SupportFixity]}."
+                    f"Valid fixities are: {valid_fixities}."
                 )
         else:
             return fixity
