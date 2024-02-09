@@ -1,9 +1,43 @@
 from enum import Enum
+from typing import Any
 
 from aenum import StrEnum  # type: ignore
 
 
-class AnalysisModelType(StrEnum):  # type: ignore
+class CaseInsensitiveStrEnum(StrEnum):  # type: ignore
+    """An enumeration that extends :class:`StrEnum` to support case-insensitive string comparisons."""
+
+    @classmethod
+    def _missing_(cls, value: str) -> Any:
+        """
+        Handle case-insensitive value lookup for the enumeration.
+
+        This method is invoked by the base Enum class when a value is not immediately
+        found in the enum members. It normalizes the input `value` to lowercase and
+        attempts to match it against the lowercase versions of the enum's values. If a match
+        is found, the corresponding enum member is returned, allowing for case-insensitive
+        matching. If no match is found, a ValueError is raised with a message indicating
+        the valid choices.
+
+        :param value: The string value to find in the enum.
+        :return: The enum member corresponding to the input `value`, matched case-insensitively.
+        :raises ValueError: If the normalized `value` does not match any member of the enum,
+                            indicating the value is not a valid choice. The error message
+                            includes the valid choices for convenience.
+        """
+        value = value.lower()
+        choices = [member.value for member in cls]  # type: ignore[attr-defined]
+
+        if value not in choices:
+            raise ValueError(
+                f"'{value}' is not a valid {cls.__name__}, choose from {choices}."
+            )
+        for member in cls:  # type: ignore[attr-defined]
+            if member.value == value:
+                return member
+
+
+class AnalysisModelType(CaseInsensitiveStrEnum):
     """
     Enumeration of finite element analysis (FEA) model types.
 
@@ -32,7 +66,7 @@ class AnalysisModelType(StrEnum):  # type: ignore
     FRAME_XYZ = "frame_xyz"
 
 
-class Element1DType(StrEnum):  # type: ignore
+class Element1DType(CaseInsensitiveStrEnum):
     """
     Enumeration of types of 1D elements based on beam theory.
 
@@ -48,7 +82,7 @@ class Element1DType(StrEnum):  # type: ignore
     TIMOSHENKO = "timoshenko"
 
 
-class BeamConnection(StrEnum):  # type: ignore
+class BeamConnection(CaseInsensitiveStrEnum):
     """
     Enumeration of types of end conditions for beam elements defining how beams are connected to nodes.
 
@@ -66,7 +100,7 @@ class BeamConnection(StrEnum):  # type: ignore
     SEMIRIGID_END = "semirigid"
 
 
-class DistributedLoadDirection(StrEnum):  # type: ignore
+class DistributedLoadDirection(CaseInsensitiveStrEnum):
     """
     Enumeration of possible directions for a distributed load in structural models.
 
@@ -82,7 +116,7 @@ class DistributedLoadDirection(StrEnum):  # type: ignore
     Z = "z"
 
 
-class LoadCoordinateSystem(StrEnum):  # type: ignore
+class LoadCoordinateSystem(CaseInsensitiveStrEnum):
     """
     Enumeration of coordinate systems used to define the orientation of distributed loads in structural model.
 
@@ -96,7 +130,7 @@ class LoadCoordinateSystem(StrEnum):  # type: ignore
     LOCAL = "local"
 
 
-class DistributedLoadLocation(StrEnum):  # type: ignore
+class DistributedLoadLocation(CaseInsensitiveStrEnum):
     """
     Enumeration for specifying the method of applying a distributed load on an inclined beam.
 
@@ -109,7 +143,7 @@ class DistributedLoadLocation(StrEnum):  # type: ignore
     PROJECTION = "projection"
 
 
-class CoordinateDefinition(StrEnum):  # type: ignore
+class CoordinateDefinition(CaseInsensitiveStrEnum):
     """
     Enumeration distinguishing between absolute and relative coordinates.
 
@@ -123,7 +157,7 @@ class CoordinateDefinition(StrEnum):  # type: ignore
     RELATIVE = "relative"
 
 
-class SupportFixity(StrEnum):  # type: ignore
+class SupportFixity(CaseInsensitiveStrEnum):
     """
     Enumeration of support types.
 
@@ -177,7 +211,7 @@ class DoF(Enum):
         self.direction = direction
 
     @staticmethod
-    def get_index(direction: str) -> int | ValueError:
+    def get_index(direction: str) -> int:
         """
         Retrieve the index corresponding to a given direction of degree of freedom.
 
