@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 from framesss.enums import BeamConnection
 from framesss.enums import DoF
 from framesss.enums import SupportFixity
@@ -12,11 +14,18 @@ from framesss.fea.boundary_conditions.prescribed_displacement import (
 from framesss.post.node_results import NodeResults
 
 if TYPE_CHECKING:  # pragma: no cover
-    import numpy as np
     import numpy.typing as npt
 
     from framesss.fea.models.model import Model
     from framesss.pre.cases import LoadCase
+
+
+SUPPORT_FIXITIES = [
+    SupportFixity.FREE_DOF,
+    SupportFixity.FIXED_DOF,
+    SupportFixity.SPRING_DOF,
+    SupportFixity.FICTFIXED_DOF,
+]
 
 
 class Node:
@@ -45,7 +54,7 @@ class Node:
         self,
         label: str,
         coords: list[float] | npt.NDArray[np.float64],
-        fixity: list[SupportFixity] | list[str],
+        fixity: list[SupportFixity],
         spring_stiffness: list[float],
     ) -> None:
         """Init the Node class."""
@@ -56,10 +65,10 @@ class Node:
         self.spring_stiffness = spring_stiffness
         self.loads: dict[LoadCase, NodalLoad] = {}
         self.results = NodeResults(self)
-        self.global_dofs: list[int] | None = None
+        self.global_dofs: npt.NDArray[np.int64] = np.empty(0, dtype=np.int64)
 
     def __repr__(self) -> str:  # pragma: no cover
-        """Return a string representation of the node."""
+        """Return a string representation of the Node object."""
         return (
             f"{self.__class__.__name__}("
             f"label={self.label!r}, "
@@ -70,7 +79,7 @@ class Node:
 
     def validate_fixity(
         self, fixity: list[SupportFixity] | list[str]
-    ) -> list[SupportFixity] | list[str] | ValueError:
+    ) -> list[SupportFixity]:
         """
         Validate the fixity conditions provided for a node.
 
@@ -87,16 +96,17 @@ class Node:
                 f"Fixity at node '{self.label}' must have 6 elements. Got {len(fixity)} elements."
             )
 
-        valid_fixities = [fix.value for fix in SupportFixity]
+        fixities = []
 
         for i, fix in enumerate(fixity):
-            if fix not in valid_fixities:
+            if fix not in SUPPORT_FIXITIES:
                 raise ValueError(
                     f"Invalid fixity: '{fix}' for the node: '{self.label}' at the index {i}\n"
-                    f"Valid fixities are: {valid_fixities}."
+                    f"Valid fixities are: {SUPPORT_FIXITIES}."
                 )
-        else:
-            return fixity
+            fixities.append(SupportFixity(fix))
+
+        return fixities
 
     def get_elements_incidence(self, model: Model) -> tuple[int, int]:
         """
@@ -129,7 +139,7 @@ class Node:
 
         return tot, hng
 
-    # TODO: Move this to the Model class
+    # TODO: Move this to the Model class?
     def add_nodal_load(
         self,
         load_components: list[float] | npt.NDArray[np.float64],
