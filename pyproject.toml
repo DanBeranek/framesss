@@ -132,6 +132,7 @@ classmethod-decorators = ["classmethod", "validator", "root_validator", "pydanti
     "D103",
     "S101",    # asserts are encouraged in pytest
 ]
+"**/element_load.py" = ["E741"]  # ignore ambigious variable name
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
