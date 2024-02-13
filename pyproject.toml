@@ -131,6 +131,7 @@ classmethod-decorators = ["classmethod", "validator", "root_validator", "pydanti
     "D102",
     "D103",
     "S101",    # asserts are encouraged in pytest
+    "E741",    # ignore ambigious variable name
 ]
 "**/element_load.py" = ["E741"]  # ignore ambigious variable name
 
