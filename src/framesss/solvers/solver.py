@@ -175,15 +175,20 @@ class Solver(ABC):
             self.model.analysis.save_displacements(node, load_case)
 
     @abstractmethod
-    def solve(self, load_case: LoadCase) -> None:
+    def solve_load_case(self, load_case: LoadCase) -> None:
+        """Solve the system of equilibrium equations for a specific load case."""
+        pass
+
+    @abstractmethod
+    def solve(self, verbose: bool) -> None:
         """
-        Abstract method to solve the structural finite element analysis (FEA) problem for a given load case.
+        Abstract method to solve the FEA problem.
 
         This method serves as a placeholder for solver algorithms that compute the solution to structural
         analysis problems. Concrete implementations of this method in subclasses should define the specific
         steps and algorithms used to solve the FEA problem.
 
-        :param load_case: A reference to an instance of the :class:`LoadCase` class.
+        :param verbose: If True, detailed progress of each analysis step is printed to the console.
 
         Implementing this method in a subclass involves utilizing the global stiffness matrix, load vectors, and any
         other necessary structural model data to calculate the response of the structure under the specified load case.
