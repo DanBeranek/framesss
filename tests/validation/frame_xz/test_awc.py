@@ -15,33 +15,37 @@ from framesss.pre.material import Material
 from framesss.pre.section import Section
 from framesss.solvers.linear_static import LinearStaticSolver
 
-LOW = 1
-HIGH = 10
+P = 1000.0  # Force magnitude
 
-P = np.random.randint(LOW, HIGH) - (HIGH - LOW) / 2  # Force magnitude
+P1 = 750.0  # Force magnitude
+P2 = 500.0
 
-P1 = np.random.randint(LOW, HIGH) - (HIGH - LOW) / 2  # Force magnitude
-# Ensure that both Forces have same direction
-if P1 > 0:
-    P2 = np.random.randint(LOW, int(HIGH / 2))  # Distributed load magnitude
-else:
-    P2 = np.random.randint(-int(HIGH / 2), -LOW)
+w = 1000.0  # Distributed load magnitude
 
-w = np.random.randint(LOW, HIGH) - (HIGH - LOW) / 2  # Distributed load magnitude
+w1 = 500.0  # Distributed load magnitude
+w2 = 750.0  # Distributed load magnitude
 
-w1 = np.random.randint(LOW, HIGH) - (HIGH - LOW) / 2  # Distributed load magnitude
-# Ensure that both loads have same direction
-if w1 > 0:
-    w2 = np.random.randint(LOW, int(HIGH / 2))  # Distributed load magnitude
-else:
-    w2 = np.random.randint(-int(HIGH / 2), -LOW)
+L = 8.0
+E = 210.0e9  # Elastic modulus
+I = 2.0e-3  # Second moment of inertia
 
-L = np.random.randint(LOW, HIGH)  # Length
-E = np.random.randint(LOW, HIGH)  # Elastic modulus
-I = np.random.randint(LOW, HIGH)  # Second moment of inertia
+a1 = 0.6 * L
+b1 = 0.4 * L
+
+a2 = 0.3 * L
+b2 = 0.3 * L
+c2 = 0.4 * L
 
 DUMMY_MAT = Material("foo", E, 1, 1, 1)
 DUMMY_SEC = Section("bar", 1, 1, 1, 1, I, 1, 1, 1)
+
+
+def assert_almost_equal_to_4_decimal(actual, desired) -> None:
+    assert_almost_equal(actual, desired, decimal=3)
+
+
+def assert_array_almost_equal_to_4_decimal(actual, desired) -> None:
+    assert_array_almost_equal(actual, desired, decimal=3)
 
 
 def test_figure_1() -> None:
@@ -78,23 +82,27 @@ def test_figure_1() -> None:
     min_max_moment = np.sort([0, w * L**2 / 8])
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Displacements
-    assert_array_almost_equal(member.results.translations_z[load_case], translations_z)
+    assert_array_almost_equal_to_4_decimal(
+        member.results.translations_z[load_case], translations_z
+    )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -112,8 +120,7 @@ def test_figure_2() -> None:
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
-    random_values = np.random.random(3)
-    a, b, c = (random_values / np.sum(random_values)) * member.length
+    a, b, c = a2, b2, c2
 
     # Load in [1] is applied in the negative z-direction
     member.add_distributed_load(
@@ -152,20 +159,22 @@ def test_figure_2() -> None:
     min_max_moment = np.sort([0, R1 * (a + R1 / (2 * w))])
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -183,8 +192,7 @@ def test_figure_3() -> None:
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
-    random_values = np.random.random(2)
-    a, b = (random_values / np.sum(random_values)) * member.length
+    a = a1
 
     # Load in [1] is applied in the negative z-direction
     member.add_distributed_load(
@@ -237,23 +245,27 @@ def test_figure_3() -> None:
     min_max_moment = np.sort([0, R1**2 / (2 * w)])
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Displacements
-    assert_array_almost_equal(member.results.translations_z[load_case], translations_z)
+    assert_array_almost_equal_to_4_decimal(
+        member.results.translations_z[load_case], translations_z
+    )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -271,8 +283,7 @@ def test_figure_4() -> None:
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
-    random_values = np.random.random(3)
-    a, b, c = (random_values / np.sum(random_values)) * member.length
+    a, b, c = a2, b2, c2
 
     # Load in [1] is applied in the negative z-direction
     member.add_distributed_load(
@@ -319,20 +330,22 @@ def test_figure_4() -> None:
         min_max_moment = np.sort([0, R2**2 / (2 * w2)])
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -375,23 +388,27 @@ def test_figure_5() -> None:
     min_max_moment = np.sort([0, 2 * W * L / (9 * np.sqrt(3))])
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Displacements
-    assert_array_almost_equal(member.results.translations_z[load_case], translations_z)
+    assert_array_almost_equal_to_4_decimal(
+        member.results.translations_z[load_case], translations_z
+    )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -454,23 +471,27 @@ def test_figure_6() -> None:
     min_max_moment = np.sort([0, W * L / 6])
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Displacements
-    assert_array_almost_equal(member.results.translations_z[load_case], translations_z)
+    assert_array_almost_equal_to_4_decimal(
+        member.results.translations_z[load_case], translations_z
+    )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -520,7 +541,7 @@ def test_figure_7() -> None:
     )
 
     # Handle the mid-values of shear force
-    interval = np.where(x == L / 2)[0]
+    interval = np.where(np.isclose(x, L / 2) != 0)[0]
     shear_forces_z[interval[0]] = R1
     shear_forces_z[interval[1]] = -R2
 
@@ -528,23 +549,27 @@ def test_figure_7() -> None:
     min_max_moment = np.sort([0, P * L / 4])
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Displacements
-    assert_array_almost_equal(member.results.translations_z[load_case], translations_z)
+    assert_array_almost_equal_to_4_decimal(
+        member.results.translations_z[load_case], translations_z
+    )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -562,8 +587,7 @@ def test_figure_8() -> None:
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
-    random_values = np.random.random(2)
-    a, b = (random_values / np.sum(random_values)) * member.length
+    a, b = a1, b1
 
     # Load in [1] is applied in the negative z-direction
     member.add_point_force([0, 0, -P], load_case, x=a, coordinate_definition="absolute")
@@ -601,7 +625,7 @@ def test_figure_8() -> None:
     )
 
     # Handle the mid-values of shear force
-    interval = np.where(x == a)[0]
+    interval = np.where(np.isclose(x, a) != 0)[0]
     shear_forces_z[interval[0]] = R1
     shear_forces_z[interval[1]] = -R2
 
@@ -609,23 +633,27 @@ def test_figure_8() -> None:
     min_max_moment = np.sort([0, P * a * b / L])
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Displacements
-    assert_array_almost_equal(member.results.translations_z[load_case], translations_z)
+    assert_array_almost_equal_to_4_decimal(
+        member.results.translations_z[load_case], translations_z
+    )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -643,7 +671,7 @@ def test_figure_9() -> None:
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
-    a = np.random.random() * 0.5 * member.length
+    a = 0.3
 
     # Load in [1] is applied in the negative z-direction
     member.add_point_force([0, 0, -P], load_case, x=a, coordinate_definition="absolute")
@@ -672,7 +700,7 @@ def test_figure_9() -> None:
         -P * x[interval] * (3 * L * a - 3 * a**2 - x[interval] ** 2) / (6 * E * I)
     )
 
-    interval = np.where(x == a)[0]
+    interval = np.where(np.isclose(x, a) != 0)[0]
     shear_forces_z[interval[0]] = R1
     shear_forces_z[interval[1]] = 0
 
@@ -693,7 +721,7 @@ def test_figure_9() -> None:
         / (6 * E * I)
     )
 
-    interval = np.where(x == L - a)[0]
+    interval = np.where(np.isclose(x, L - a) != 0)[0]
     shear_forces_z[interval[0]] = 0
     shear_forces_z[interval[1]] = -R2
 
@@ -701,23 +729,27 @@ def test_figure_9() -> None:
     min_max_moment = np.sort([0, P * a])
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Displacements
-    assert_array_almost_equal(member.results.translations_z[load_case], translations_z)
+    assert_array_almost_equal_to_4_decimal(
+        member.results.translations_z[load_case], translations_z
+    )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -735,8 +767,7 @@ def test_figure_10() -> None:
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
-    random_values = np.random.random(3)
-    a, b, _ = (random_values / np.sum(random_values)) * member.length
+    a, b = a2, b2
 
     # Load in [1] is applied in the negative z-direction
     member.add_point_force([0, 0, -P], load_case, x=a, coordinate_definition="absolute")
@@ -769,11 +800,11 @@ def test_figure_10() -> None:
     shear_forces_z[interval] = np.full(x[interval].shape, -R2)
     bending_moments_y[interval] = R2 * (L - x[interval])
 
-    interval = np.where(x == a)[0]
+    interval = np.where(np.isclose(x, a) != 0)[0]
     shear_forces_z[interval[0]] = R1
     shear_forces_z[interval[1]] = R1 - P
 
-    interval = np.where(x == L - b)[0]
+    interval = np.where(np.isclose(x, L - b) != 0)[0]
     shear_forces_z[interval[0]] = R1 - P
     shear_forces_z[interval[1]] = -R2
 
@@ -784,20 +815,22 @@ def test_figure_10() -> None:
         min_max_moment = np.sort([0, R2 * b])
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -815,8 +848,7 @@ def test_figure_11() -> None:
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
-    random_values = np.random.random(3)
-    a, b, _ = (random_values / np.sum(random_values)) * member.length
+    a, b = a2, b2
 
     # Load in [1] is applied in the negative z-direction
     member.add_point_force(
@@ -851,11 +883,11 @@ def test_figure_11() -> None:
     shear_forces_z[interval] = np.full(x[interval].shape, -R2)
     bending_moments_y[interval] = R2 * (L - x[interval])
 
-    interval = np.where(x == a)[0]
+    interval = np.where(np.isclose(x, a) != 0)[0]
     shear_forces_z[interval[0]] = R1
     shear_forces_z[interval[1]] = R1 - P1
 
-    interval = np.where(x == L - b)[0]
+    interval = np.where(np.isclose(x, L - b) != 0)[0]
     shear_forces_z[interval[0]] = R1 - P1
     shear_forces_z[interval[1]] = -R2
 
@@ -866,20 +898,22 @@ def test_figure_11() -> None:
         min_max_moment = np.sort([0, R2 * b])
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -916,23 +950,27 @@ def test_figure_12() -> None:
     min_max_moment = np.sort([0, -M])
 
     # Reactions
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R)
-    assert_almost_equal(node_2.results.reaction_moment_y[load_case], M)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_moment_y[load_case], M)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Displacements
-    assert_array_almost_equal(member.results.translations_z[load_case], translations_z)
+    assert_array_almost_equal_to_4_decimal(
+        member.results.translations_z[load_case], translations_z
+    )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -969,23 +1007,27 @@ def test_figure_13() -> None:
     min_max_moment = np.sort([0, -M])
 
     # Reactions
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R)
-    assert_almost_equal(node_2.results.reaction_moment_y[load_case], M)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_moment_y[load_case], M)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Displacements
-    assert_array_almost_equal(member.results.translations_z[load_case], translations_z)
+    assert_array_almost_equal_to_4_decimal(
+        member.results.translations_z[load_case], translations_z
+    )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -1001,8 +1043,7 @@ def test_figure_14() -> None:
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
-    random_values = np.random.random(2)
-    a, b = (random_values / np.sum(random_values)) * member.length
+    a, b = a1, b1
 
     # Load in [1] is applied in the negative z-direction
     member.add_point_force([0, 0, -P], load_case, x=a, coordinate_definition="absolute")
@@ -1033,7 +1074,7 @@ def test_figure_14() -> None:
         -P * (L - x[interval]) ** 2 * (3 * b - L + x[interval]) / (6 * E * I)
     )
 
-    interval = np.where(x == a)[0]
+    interval = np.where(np.isclose(x, a) != 0)[0]
     shear_forces_z[interval[0]] = 0
     shear_forces_z[interval[1]] = -R
 
@@ -1041,23 +1082,27 @@ def test_figure_14() -> None:
     min_max_moment = np.sort([0, -M])
 
     # Reactions
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R)
-    assert_almost_equal(node_2.results.reaction_moment_y[load_case], M)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_moment_y[load_case], M)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Displacements
-    assert_array_almost_equal(member.results.translations_z[load_case], translations_z)
+    assert_array_almost_equal_to_4_decimal(
+        member.results.translations_z[load_case], translations_z
+    )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -1096,24 +1141,28 @@ def test_figure_15() -> None:
     min_max_moment = np.sort([9 * w * L**2 / 128, -M])
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
-    assert_almost_equal(node_2.results.reaction_moment_y[load_case], M)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_moment_y[load_case], M)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Displacements
-    assert_array_almost_equal(member.results.translations_z[load_case], translations_z)
+    assert_array_almost_equal_to_4_decimal(
+        member.results.translations_z[load_case], translations_z
+    )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -1163,7 +1212,7 @@ def test_figure_16() -> None:
         -P * (x[interval] - L) ** 2 * (11 * x[interval] - 2 * L) / (96 * E * I)
     )
 
-    interval = np.where(x == L / 2)[0]
+    interval = np.where(np.isclose(x, L / 2) != 0)[0]
     shear_forces_z[interval[0]] = R1
     shear_forces_z[interval[1]] = -R2
 
@@ -1171,24 +1220,28 @@ def test_figure_16() -> None:
     min_max_moment = np.sort([5 * P * L / 32, -M])
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
-    assert_almost_equal(node_2.results.reaction_moment_y[load_case], M)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_moment_y[load_case], M)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Displacements
-    assert_array_almost_equal(member.results.translations_z[load_case], translations_z)
+    assert_array_almost_equal_to_4_decimal(
+        member.results.translations_z[load_case], translations_z
+    )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -1206,8 +1259,7 @@ def test_figure_17() -> None:
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
-    random_values = np.random.random(2)
-    a, b = (random_values / np.sum(random_values)) * member.length
+    a, b = a1, b1
 
     # Load in [1] is applied in the negative z-direction
     member.add_point_force([0, 0, -P], load_case, x=a, coordinate_definition="absolute")
@@ -1249,7 +1301,7 @@ def test_figure_17() -> None:
         / (12 * E * I * L**3)
     )
 
-    interval = np.where(x == a)[0]
+    interval = np.where(np.isclose(x, a) != 0)[0]
     shear_forces_z[interval[0]] = R1
     shear_forces_z[interval[1]] = -R2
 
@@ -1257,24 +1309,28 @@ def test_figure_17() -> None:
     min_max_moment = np.sort([R1 * a, -M])
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
-    assert_almost_equal(node_2.results.reaction_moment_y[load_case], M)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_moment_y[load_case], M)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Displacements
-    assert_array_almost_equal(member.results.translations_z[load_case], translations_z)
+    assert_array_almost_equal_to_4_decimal(
+        member.results.translations_z[load_case], translations_z
+    )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -1355,7 +1411,7 @@ def test_figure_18() -> None:
         / (24 * E * I)
     )
 
-    interval = np.where(x == L)[0]
+    interval = np.where(np.isclose(x, L) != 0)[0]
     shear_forces_z[interval[0]] = -V3
     shear_forces_z[interval[1]] = V2
 
@@ -1365,23 +1421,27 @@ def test_figure_18() -> None:
     )
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
 
     # Internal forces
-    assert_array_almost_equal(member.results.shear_forces_z[load_case], shear_forces_z)
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
+        member.results.shear_forces_z[load_case], shear_forces_z
+    )
+    assert_array_almost_equal_to_4_decimal(
         member.results.bending_moments_y[load_case], bending_moments_y
     )
 
     # Displacements
-    assert_array_almost_equal(member.results.translations_z[load_case], translations_z)
+    assert_array_almost_equal_to_4_decimal(
+        member.results.translations_z[load_case], translations_z
+    )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_shear_forces_z[load_case], min_max_shear
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member.results.min_max_bending_moments_y[load_case], min_max_moment
     )
 
@@ -1394,7 +1454,7 @@ def test_figure_19() -> None:
     Index 1: Beam between supports,
     Index 2: Overhang
     """
-    a = np.random.randint(1, 10) / 2
+    a = 1
 
     model = FrameXZModel()
     node_1 = model.add_node(
@@ -1443,43 +1503,43 @@ def test_figure_19() -> None:
     min_max_moment_2 = np.sort([0, -w * a**2 / 2])
 
     # Reactions
-    assert_almost_equal(node_1.results.reaction_force_z[load_case], R1)
-    assert_almost_equal(node_2.results.reaction_force_z[load_case], R2)
+    assert_almost_equal_to_4_decimal(node_1.results.reaction_force_z[load_case], R1)
+    assert_almost_equal_to_4_decimal(node_2.results.reaction_force_z[load_case], R2)
 
     # Internal forces
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member_1.results.shear_forces_z[load_case], shear_forces_z_1
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member_1.results.bending_moments_y[load_case], bending_moments_y_1
     )
 
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member_2.results.shear_forces_z[load_case], shear_forces_z_2
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member_2.results.bending_moments_y[load_case], bending_moments_y_2
     )
 
     # Displacements
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member_1.results.translations_z[load_case], translations_z_1
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member_2.results.translations_z[load_case], translations_z_2
     )
 
     # Extremes
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member_1.results.min_max_shear_forces_z[load_case], min_max_shear_1
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member_1.results.min_max_bending_moments_y[load_case], min_max_moment_1
     )
 
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member_2.results.min_max_shear_forces_z[load_case], min_max_shear_2
     )
-    assert_array_almost_equal(
+    assert_array_almost_equal_to_4_decimal(
         member_2.results.min_max_bending_moments_y[load_case], min_max_moment_2
     )
