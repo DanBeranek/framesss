@@ -745,8 +745,8 @@ class ThermalLoad(ElementLoad):
     :param element: A reference to an instance of the :class:`Element1D` class.
     :ivar temperature_gradients: A list of the temperature gradient relative to local axis
                                  [temperature variation on member center of gravity,
-                                  temperature gradient relative to local y-axis,
-                                  temperature gradient relative to local z-axis]
+                                 temperature gradient relative to local y-axis,
+                                 temperature gradient relative to local z-axis]
     """
 
     def __init__(self, element: Element1D) -> None:

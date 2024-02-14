@@ -31,13 +31,15 @@ author = "Daniel Beranek"
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
+    "sphinx.ext.viewcode",
     "myst_parser",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = []
+templates_path = ["templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

@@ -25,9 +25,10 @@ class LinearStaticSolver(Solver):
 
         The method divides the stiffness matrix (k_global), the force vector (f_global),
         and the displacement vector (u_global) based on the DoFs categorizations:
-            - f: free DoFs (numbered first) - natural B.C. (unknown)
-            - s: -> spring DoFs (numbered after free DoFs) - natural B.C. (unknown)
-            - c: -> fixed DoFs with known displacements (numbered last) - essential B.C. (known)
+
+          - f: free DoFs (numbered first), natural B.C. (unknown)
+          - s: spring DoFs (numbered after free DoFs), natural B.C. (unknown)
+          - c: fixed DoFs with known displacements (numbered last), essential B.C. (known)
 
         Spring DoFs have unknown displacement values, so they are treated as free DoFs on the next steps.
 

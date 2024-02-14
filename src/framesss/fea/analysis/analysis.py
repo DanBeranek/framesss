@@ -34,11 +34,13 @@ class Analysis(ABC):
     These implementations should provide the specific properties and behaviors unique to each
     type of FEA model. The abstract nature of this class means it cannot be instantiated
     directly; instead, it should be subclassed to create specific model types such as:
-        - :class:`FrameXZAnalysis`
-        - :class:`FrameXYZAnalysis`
-        - :class:`GridXYAnalysis`
-        - :class:`TrussXYAnalysis`
-        - :class:`TrussXYZAnalysis`
+
+      - :class:`FrameXZAnalysis`
+      - :class:`FrameXYZAnalysis`
+      - :class:`GridXYAnalysis`
+      - :class:`TrussXYAnalysis`
+      - :class:`TrussXYZAnalysis`
+
     Each subclass represents a different structural analysis model, encapsulating the unique
     characteristics and behaviors of that model type.
 

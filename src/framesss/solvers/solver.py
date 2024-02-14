@@ -98,10 +98,10 @@ class Solver(ABC):
         Calculate and save the internal forces for each element in the model under a specified load case.
 
         For each element in the model, the method:
-        - Retrieves the internal actions derived from global analysis results.
-        - Adds contributions from fixed end forces due to distributed loads and thermal effects, if present
-          for the element under the given load case.
-        - Assembles the calculated internal forces into appropriate arrays or structures for further analysis.
+          - Retrieves the internal actions derived from global analysis results.
+          - Adds contributions from fixed end forces due to distributed loads and thermal effects, if present
+            for the element under the given load case.
+          - Assembles the calculated internal forces into appropriate arrays or structures for further analysis.
 
         :param load_case: A reference to an instance of the :class:`LoadCase` class.
         """

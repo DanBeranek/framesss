@@ -115,11 +115,8 @@ class Node:
         :param model: A reference to the instance of the :class:`Model` class containing
                       the node and its connected elements. This is used to access the
                       list of elements for incidence counting.
-        :return: A tuple containing two integers:
-                 - The first integer represents the total number of elements connected
-                   to this node.
-                 - The second integer represents the number of those elements that are
-                   connected via a hinged end at this node.
+        :return: A tuple containing total number of elements connected to this node and
+                 number of those elements that are connected via a hinged end at this node.
         """
         tot = 0
         hng = 0
