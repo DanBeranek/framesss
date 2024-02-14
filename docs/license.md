@@ -5,3 +5,9 @@
 language: none
 ---
 ```
+
+```{literalinclude} ../LICENSE.LESM
+---
+language: none
+---
+```
