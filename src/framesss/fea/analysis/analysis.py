@@ -8,7 +8,7 @@ import numpy as np
 
 from framesss.enums import SupportFixity
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     import numpy.typing as npt
 
     from framesss.enums import AnalysisModelType

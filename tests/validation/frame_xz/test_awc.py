@@ -1,3 +1,4 @@
+# mypy: disable-error-code="assignment"
 """
 Test examples from American Wood Council.
 
@@ -513,7 +514,7 @@ def test_figure_7() -> None:
     )
 
     # Handle the mid-values of shear force
-    interval = np.where(np.isclose(x, L / 2) != 0)[0]
+    interval = np.where(np.isclose(x, L / 2))[0]
     shear_forces_z[interval[0]] = R1
     shear_forces_z[interval[1]] = -R2
 
@@ -593,7 +594,7 @@ def test_figure_8() -> None:
     )
 
     # Handle the mid-values of shear force
-    interval = np.where(np.isclose(x, a) != 0)[0]
+    interval = np.where(np.isclose(x, a))[0]
     shear_forces_z[interval[0]] = R1
     shear_forces_z[interval[1]] = -R2
 
@@ -664,7 +665,7 @@ def test_figure_9() -> None:
         -P * x[interval] * (3 * L * a - 3 * a**2 - x[interval] ** 2) / (6 * E * I)
     )
 
-    interval = np.where(np.isclose(x, a) != 0)[0]
+    interval = np.where(np.isclose(x, a))[0]
     shear_forces_z[interval[0]] = R1
     shear_forces_z[interval[1]] = 0
 
@@ -685,7 +686,7 @@ def test_figure_9() -> None:
         / (6 * E * I)
     )
 
-    interval = np.where(np.isclose(x, L - a) != 0)[0]
+    interval = np.where(np.isclose(x, L - a))[0]
     shear_forces_z[interval[0]] = 0
     shear_forces_z[interval[1]] = -R2
 
@@ -760,11 +761,11 @@ def test_figure_10() -> None:
     shear_forces_z[interval] = np.full(x[interval].shape, -R2)
     bending_moments_y[interval] = R2 * (L - x[interval])
 
-    interval = np.where(np.isclose(x, a) != 0)[0]
+    interval = np.where(np.isclose(x, a))[0]
     shear_forces_z[interval[0]] = R1
     shear_forces_z[interval[1]] = R1 - P
 
-    interval = np.where(np.isclose(x, L - b) != 0)[0]
+    interval = np.where(np.isclose(x, L - b))[0]
     shear_forces_z[interval[0]] = R1 - P
     shear_forces_z[interval[1]] = -R2
 
@@ -841,11 +842,11 @@ def test_figure_11() -> None:
     shear_forces_z[interval] = np.full(x[interval].shape, -R2)
     bending_moments_y[interval] = R2 * (L - x[interval])
 
-    interval = np.where(np.isclose(x, a) != 0)[0]
+    interval = np.where(np.isclose(x, a))[0]
     shear_forces_z[interval[0]] = R1
     shear_forces_z[interval[1]] = R1 - P1
 
-    interval = np.where(np.isclose(x, L - b) != 0)[0]
+    interval = np.where(np.isclose(x, L - b))[0]
     shear_forces_z[interval[0]] = R1 - P1
     shear_forces_z[interval[1]] = -R2
 
@@ -1022,7 +1023,7 @@ def test_figure_14() -> None:
         -P * (L - x[interval]) ** 2 * (3 * b - L + x[interval]) / (6 * E * I)
     )
 
-    interval = np.where(np.isclose(x, a) != 0)[0]
+    interval = np.where(np.isclose(x, a))[0]
     shear_forces_z[interval[0]] = 0
     shear_forces_z[interval[1]] = -R
 
@@ -1152,7 +1153,7 @@ def test_figure_16() -> None:
         -P * (x[interval] - L) ** 2 * (11 * x[interval] - 2 * L) / (96 * E * I)
     )
 
-    interval = np.where(np.isclose(x, L / 2) != 0)[0]
+    interval = np.where(np.isclose(x, L / 2))[0]
     shear_forces_z[interval[0]] = R1
     shear_forces_z[interval[1]] = -R2
 
@@ -1237,7 +1238,7 @@ def test_figure_17() -> None:
         / (12 * E * I * L**3)
     )
 
-    interval = np.where(np.isclose(x, a) != 0)[0]
+    interval = np.where(np.isclose(x, a))[0]
     shear_forces_z[interval[0]] = R1
     shear_forces_z[interval[1]] = -R2
 
@@ -1343,7 +1344,7 @@ def test_figure_18() -> None:
         / (24 * E * I)
     )
 
-    interval = np.where(np.isclose(x, L) != 0)[0]
+    interval = np.where(np.isclose(x, L))[0]
     shear_forces_z[interval[0]] = -V3
     shear_forces_z[interval[1]] = V2
 

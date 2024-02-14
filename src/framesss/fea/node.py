@@ -13,7 +13,7 @@ from framesss.fea.boundary_conditions.prescribed_displacement import (
 )
 from framesss.post.node_results import NodeResults
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     import numpy.typing as npt
 
     from framesss.fea.models.model import Model
@@ -67,7 +67,7 @@ class Node:
         self.results = NodeResults(self)
         self.global_dofs: npt.NDArray[np.int64] = np.empty(0, dtype=np.int64)
 
-    def __repr__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:
         """Return a string representation of the Node object."""
         return (
             f"{self.__class__.__name__}("

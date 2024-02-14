@@ -7,7 +7,7 @@ import numpy as np
 from framesss.enums import BeamConnection
 from framesss.enums import Element1DType
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     import numpy.typing as npt
 
     from framesss.fea.node import Node
@@ -128,7 +128,7 @@ class Element1D:
         self.bending_moment_y: dict[LoadCase, npt.NDArray[np.float64]] = {}
         self.bending_moment_z: dict[LoadCase, npt.NDArray[np.float64]] = {}
 
-    def __repr__(self) -> str:  # pragma: no cover
+    def __repr__(self) -> str:
         """Return a string representation of the element."""
         node_labels = [node.label for node in self.nodes]
         hinge_descriptions = [hinge for hinge in [self.hinge_start, self.hinge_end]]
