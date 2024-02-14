@@ -12,7 +12,7 @@ from framesss.pre.cases import LoadCase
 from framesss.pre.cases import LoadCombination
 from framesss.pre.member_1d import Member1D
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     import numpy.typing as npt
 
     from framesss.fea.analysis.analysis import Analysis
