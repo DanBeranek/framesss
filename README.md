@@ -1,3 +1,11 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/_static/logo-dark-mode.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/_static/logo-light-mode.png">
+  <img alt="framesss logo" src="docs/_static/logo-light-mode.png">
+</picture>
+
+<!-- github-only-logo -->
+
 # framesss
 
 [![PyPI](https://img.shields.io/pypi/v/framesss.svg)][pypi status]
