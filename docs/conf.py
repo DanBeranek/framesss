@@ -34,6 +34,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
+    "sphinx.ext.viewcode",
     "myst_parser",
 ]
 
