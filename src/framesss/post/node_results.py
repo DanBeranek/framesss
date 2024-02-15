@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import TypeAlias
+from typing import Union
+
+from typing_extensions import TypeAlias
 
 from framesss.enums import SupportFixity
 from framesss.utils import DictProxy
@@ -11,7 +13,7 @@ if TYPE_CHECKING:
     from framesss.pre.cases import LoadCase
     from framesss.pre.cases import LoadCombination
 
-    LoadType: TypeAlias = LoadCase | LoadCombination
+    LoadType: TypeAlias = Union[LoadCase, LoadCombination]
     ResultDict: TypeAlias = dict[LoadType, float]
 
 FIXITIES_WITH_REACTION = [SupportFixity.FIXED_DOF, SupportFixity.SPRING_DOF]

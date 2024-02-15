@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from typing import TypeAlias
+from typing import Union
+
+from typing_extensions import TypeAlias
 
 if TYPE_CHECKING:
     import numpy as np
@@ -11,7 +13,7 @@ if TYPE_CHECKING:
     from framesss.pre.cases import LoadCombination
     from framesss.pre.member_1d import Member1D
 
-    LoadType: TypeAlias = LoadCase | LoadCombination
+    LoadType: TypeAlias = Union[LoadCase, LoadCombination]
     ResultDict: TypeAlias = dict[LoadType, npt.NDArray[np.float64]]
 
 
