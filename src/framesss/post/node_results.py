@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from typing import Union
 
-from typing_extensions import TypeAlias
-
 from framesss.enums import SupportFixity
 from framesss.utils import DictProxy
 
 if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
+
     from framesss.fea.node import Node
     from framesss.pre.cases import LoadCase
     from framesss.pre.cases import LoadCombination

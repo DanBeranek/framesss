@@ -3,11 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from typing import Union
 
-from typing_extensions import TypeAlias
-
 if TYPE_CHECKING:
     import numpy as np
     import numpy.typing as npt
+    from typing_extensions import TypeAlias
 
     from framesss.pre.cases import LoadCase
     from framesss.pre.cases import LoadCombination
