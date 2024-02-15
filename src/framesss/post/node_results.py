@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import TypeAlias
 
 from framesss.enums import SupportFixity
 from framesss.utils import DictProxy
@@ -8,6 +9,10 @@ from framesss.utils import DictProxy
 if TYPE_CHECKING:
     from framesss.fea.node import Node
     from framesss.pre.cases import LoadCase
+    from framesss.pre.cases import LoadCombination
+
+    LoadType: TypeAlias = LoadCase | LoadCombination
+    ResultDict: TypeAlias = dict[LoadType, float]
 
 FIXITIES_WITH_REACTION = [SupportFixity.FIXED_DOF, SupportFixity.SPRING_DOF]
 
@@ -19,20 +24,20 @@ class NodeResults:
         """Init the NodeResults class."""
         self.node = node
 
-        self.translation_x: dict[LoadCase, float] = {}
-        self.translation_y: dict[LoadCase, float] = {}
-        self.translation_z: dict[LoadCase, float] = {}
+        self.translation_x: ResultDict = {}
+        self.translation_y: ResultDict = {}
+        self.translation_z: ResultDict = {}
 
-        self.rotation_x: dict[LoadCase, float] = {}
-        self.rotation_y: dict[LoadCase, float] = {}
-        self.rotation_z: dict[LoadCase, float] = {}
+        self.rotation_x: ResultDict = {}
+        self.rotation_y: ResultDict = {}
+        self.rotation_z: ResultDict = {}
 
-        self._reaction_force_x: dict[LoadCase, float] = {}
-        self._reaction_force_y: dict[LoadCase, float] = {}
-        self._reaction_force_z: dict[LoadCase, float] = {}
-        self._reaction_moment_x: dict[LoadCase, float] = {}
-        self._reaction_moment_y: dict[LoadCase, float] = {}
-        self._reaction_moment_z: dict[LoadCase, float] = {}
+        self._reaction_force_x: ResultDict = {}
+        self._reaction_force_y: ResultDict = {}
+        self._reaction_force_z: ResultDict = {}
+        self._reaction_moment_x: ResultDict = {}
+        self._reaction_moment_y: ResultDict = {}
+        self._reaction_moment_z: ResultDict = {}
 
         # Initialize or reset dictionaries based on node fixity.
         self.initialize_reaction_dictionaries()

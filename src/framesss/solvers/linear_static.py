@@ -99,7 +99,9 @@ class LinearStaticSolver(Solver):
 
         :param verbose: If True, detailed progress of each analysis step is printed to the console.
         """
-        n_steps = 6 + len(self.model.load_cases) * 7 + 1
+        steps_cases = len(self.model.load_cases) * 7
+        steps_combs = len(self.model.load_combinations) * 4
+        n_steps = 7 + steps_cases + steps_combs
 
         if verbose:
             print(f"1/{n_steps} : Preparing fea data...")
@@ -176,6 +178,29 @@ class LinearStaticSolver(Solver):
             self.save_member_internal_displacements(load_case)
 
             load_case.is_solved = True
+
+        for i, load_combination in enumerate(self.model.load_combinations):
+            if verbose:
+                print(
+                    f"{i*7 + steps_cases + 1}/{n_steps} : Computing internal forces for load combination: "
+                    f"'{load_combination.label}'..."
+                )
+            self.save_displacements_combination(load_combination)
+            self.save_reactions_combination(load_combination)
+
+            if verbose:
+                print(
+                    f"{i*7 + steps_cases + 2}/{n_steps} : Computing internal forces for load combination: "
+                    f"'{load_combination.label}'..."
+                )
+            self.save_member_internal_forces_combination(load_combination)
+
+            if verbose:
+                print(
+                    f"{i*7 + steps_cases + 3}/{n_steps} : Computing internal displacements for load combination: "
+                    f"'{load_combination.label}'..."
+                )
+            self.save_member_internal_displacements_combination(load_combination)
 
         if verbose:
             print(f"{n_steps}/{n_steps} : Analysis successfully finished.")

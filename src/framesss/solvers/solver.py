@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
     from framesss.fea.models.model import Model
     from framesss.pre.cases import LoadCase
+    from framesss.pre.cases import LoadCombination
 
 
 class Solver(ABC):
@@ -135,6 +136,26 @@ class Solver(ABC):
         for member in self.model.members:
             self.model.analysis.save_internal_stresses_on_member(member, load_case)
 
+    # TODO: docstring
+    def save_member_internal_forces_combination(
+        self, load_combination: LoadCombination
+    ) -> None:
+        """
+        Save the internal forces for each member in the model under a specified load case.
+
+        This method iterates over all members in the model and invokes a process to calculate and store
+        the internal stresses (forces and moments) experienced by each member due to the applied loads
+        in the given load case. The calculation is performed by the `save_internal_stresses_on_member`
+        method of the analysis model, which takes into account both global and local effects to
+        accurately determine the stresses along each member.
+
+        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+        """
+        for member in self.model.members:
+            self.model.analysis.save_internal_stresses_on_member_combination(
+                member, load_combination
+            )
+
     def save_member_internal_displacements(self, load_case: LoadCase) -> None:
         """
         Save the displacements for each member in the model under a specified load case.
@@ -150,6 +171,25 @@ class Solver(ABC):
         for member in self.model.members:
             self.model.analysis.save_internal_displacements_on_member(member, load_case)
 
+    def save_member_internal_displacements_combination(
+        self, load_combination: LoadCombination
+    ) -> None:
+        """
+        Save the displacements for each member in the model under a specified load case.
+
+        This method iterates over all members in the model and invokes a process to calculate and store
+        the displacements (translations and rotations) experienced by each member due to the applied loads
+        in the given load case. The calculation is performed by the `save_internal_displacements_on_member`
+        method of the analysis model, which takes into account both global and local effects to
+        accurately determine the stresses along each member.
+
+        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+        """
+        for member in self.model.members:
+            self.model.analysis.save_internal_displacements_on_member_combination(
+                member, load_combination
+            )
+
     def save_reactions(self, load_case: LoadCase) -> None:
         """
         Save the reaction forces and moments for each node in the model under a specified load case.
@@ -162,6 +202,19 @@ class Solver(ABC):
         for node in self.model.nodes:
             self.model.analysis.save_reactions(node, load_case)
 
+    # TODO: docstring
+    def save_reactions_combination(self, load_combination: LoadCombination) -> None:
+        """
+        Save the reaction forces and moments for each node in the model under a specified load case.
+
+        This method iterates over all nodes in the model, retrieving and storing the reaction forces
+        and moments resulting from the applied loads and constraints defined by the load case.
+
+        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+        """
+        for node in self.model.nodes:
+            self.model.analysis.save_reactions_combination(node, load_combination)
+
     def save_displacements(self, load_case: LoadCase) -> None:
         """
         Save the displacements for each node in the model under a specified load case.
@@ -173,6 +226,19 @@ class Solver(ABC):
         """
         for node in self.model.nodes:
             self.model.analysis.save_displacements(node, load_case)
+
+    # TODO: docstring
+    def save_displacements_combination(self, load_combination: LoadCombination) -> None:
+        """
+        Save the displacements for each node in the model under a specified load case.
+
+        This method iterates over all nodes in the model, retrieving and storing the displacements
+        (translations and rotations) resulting from the applied loads and constraints defined by the load case.
+
+        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+        """
+        for node in self.model.nodes:
+            self.model.analysis.save_displacements_combination(node, load_combination)
 
     @abstractmethod
     def solve_load_case(self, load_case: LoadCase) -> None:

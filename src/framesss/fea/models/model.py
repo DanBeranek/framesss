@@ -171,6 +171,20 @@ class Model:
         self.load_cases.add(new_case)
         return new_case
 
+    def add_load_combination(
+        self, label: str, combination: dict[LoadCase, float]
+    ) -> LoadCombination:
+        """
+        Add and return new :class:`LoadCombination` instance.
+
+        :param label: Unique user-defined label of the load combination.
+        :param combination: Dictionary mapping :class:`LoadCase` instances
+                            to their scaling factors.
+        """
+        new_combination = LoadCombination(label, combination)
+        self.load_combinations.add(new_combination)
+        return new_combination
+
     def discretize_members(self) -> None:
         """
         Discretize all members in model and assign IDs to nodes and elements.
