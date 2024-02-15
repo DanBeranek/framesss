@@ -3,11 +3,14 @@ from __future__ import annotations
 from collections.abc import Hashable
 from typing import TYPE_CHECKING
 from typing import Any
+from typing import TypeVar
 
 import numpy as np
 
 if TYPE_CHECKING:
     import numpy.typing as npt
+
+    T = TypeVar("T")
 
 
 def assemble_subarray_at_indices(
@@ -99,6 +102,7 @@ class DictProxy:
             )  # Using .get() to avoid KeyError if the key doesn't exist
         else:
             # Handle None case
+            # pass
             raise KeyError(key)
 
     def __delitem__(self, key: Hashable) -> None:
@@ -122,3 +126,16 @@ class DictProxy:
         """Return a string representation of the proxied dictionary."""
         dict_attr = getattr(self.owner, self.dict_name)
         return repr(dict_attr) if dict_attr is not None else "None"
+
+    def get(self, key: Hashable, default: T | None = None) -> T | Any:
+        """
+        Return the value for a given key from the proxied dictionary.
+
+        A default value is returned if the key is not found.
+
+        :param key: The key of the item to retrieve.
+        :param default: The default value to return if the key is not found.
+        :return: The value associated with the key, or the default value.
+        """
+        dict_attr = getattr(self.owner, self.dict_name)
+        return dict_attr.get(key, default) if dict_attr is not None else default

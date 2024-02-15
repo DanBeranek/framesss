@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from framesss.fea.models.model import Model
     from framesss.fea.node import Node
     from framesss.pre.cases import LoadCase
+    from framesss.pre.cases import LoadCombination
     from framesss.pre.member_1d import Member1D
 
 
@@ -223,6 +224,25 @@ class Analysis(ABC):
         pass
 
     @abstractmethod
+    def save_internal_stresses_on_member_combination(
+        self, member: Member1D, load_combination: LoadCombination
+    ) -> None:
+        """
+        Compute and save internal stresses.
+
+        Computes and saves the internal stresses (axial forces, shear forces, and bending moments)
+        for a member under a specified load case. This includes both detailed distributions
+        along the member and extreme values for each stress component.
+
+        This method aggregates internal stress data from each :class:`Element1D` of the :class:`Member1D`,
+        including axial forces, shear forces in the Z direction, and bending moments about the Y axis.
+
+        :param member: A reference to an instance of the :class:`Member1D` class.
+        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+        """
+        pass
+
+    @abstractmethod
     def save_internal_displacements_on_member(
         self, member: Member1D, load_case: LoadCase
     ) -> None:
@@ -233,6 +253,20 @@ class Analysis(ABC):
 
         :param member: A reference to an instance of the :class:`Member1D` class.
         :param load_case: A reference to an instance of the :class:`LoadCase` class.
+        """
+        pass
+
+    @abstractmethod
+    def save_internal_displacements_on_member_combination(
+        self, member: Member1D, load_combination: LoadCombination
+    ) -> None:
+        """
+        Compute and save the internal displacements for a member under a specified load case.
+
+        This method aggregates displacement data from each :class:`Element1D` of the :class:`Member1D`,
+
+        :param member: A reference to an instance of the :class:`Member1D` class.
+        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
         """
         pass
 
@@ -254,6 +288,27 @@ class Analysis(ABC):
         """
         pass
 
+    # TODO: docstring
+    @abstractmethod
+    def save_reactions_combination(
+        self, node: Node, load_combination: LoadCombination
+    ) -> None:
+        """
+        Save the reaction forces and moments for a specified node under a given load combination.
+
+        This method extracts reaction forces and moments from the global force vector for the specified
+        :class:`LoadCase` and assigns them to the corresponding node results.
+
+        :param node: A reference to an instance of the :class:`Node` class.
+        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+
+        Note that the method operates directly on the `node.results` attribute, updating it with
+        the calculated reactions for the specified load case. If `node.fixity` for a particular
+        direction is not `SupportFixity.FIXED_DOF` (i.e. reaction storage for a particular direction
+        is None), this method will not attempt to save reactions in that direction.
+        """
+        pass
+
     @abstractmethod
     def save_displacements(self, node: Node, load_case: LoadCase) -> None:
         """
@@ -266,6 +321,21 @@ class Analysis(ABC):
         :param load_case: A reference to an instance of the :class:`LoadCase` class.
         """
         pass
+
+    # TODO: docstring
+    @abstractmethod
+    def save_displacements_combination(
+        self, node: Node, load_combination: LoadCombination
+    ) -> None:
+        """
+        Save the displacements for a specified node under a given load combination.
+
+        This method extracts displacements from the global displacement vector for the
+        specified :class:`LoadCase` and assigns them to the corresponding node results.
+
+        :param node: A reference to an instance of the :class:`Node` class.
+        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+        """
 
     def setup_dof_numbers(self, model: Model) -> None:
         """

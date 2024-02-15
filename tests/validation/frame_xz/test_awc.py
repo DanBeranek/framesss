@@ -875,6 +875,78 @@ def test_figure_11() -> None:
     )
 
 
+def test_figure_11_combinations() -> None:
+    """[1, Fig. 11] Simple Beam - Two Unequal Concentrated Loads Unsymmetrically Placed."""
+    model = FrameXZModel()
+    node_1 = model.add_node(
+        "N1", [], ["fixed", "free", "fixed", "free", "free", "free"]
+    )
+    node_2 = model.add_node(
+        "N2", [L], ["free", "free", "fixed", "free", "free", "free"]
+    )
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    lc1 = model.add_load_case("LC1")
+    lc2 = model.add_load_case("LC2")
+
+    combination = {
+        lc1: 1.0,
+        lc2: 2.0,
+    }
+
+    comb = model.add_load_combination("CO1", combination)
+
+    solver = LinearStaticSolver(model)
+
+    a, b = a2, b2
+
+    # Load in [1] is applied in the negative z-direction
+    member.add_point_force([0, 0, -P1], lc1, x=a, coordinate_definition="absolute")
+    member.add_point_force(
+        [0, 0, -P2 / 2], lc2, x=L - b, coordinate_definition="absolute"
+    )
+
+    solver = LinearStaticSolver(model)
+    solver.solve()
+
+    x = member.x_local
+
+    # Expected results
+    R1 = (P1 * (L - a) + P2 * b) / L
+    R2 = (P1 * a + P2 * (L - b)) / L
+
+    # Expected internal forces & displacements
+    shear_forces_z = np.zeros(x.shape)
+    bending_moments_y = np.zeros(x.shape)
+
+    interval = x <= a
+    shear_forces_z[interval] = np.full(x[interval].shape, R1)
+    bending_moments_y[interval] = R1 * x[interval]
+
+    interval = (x >= a) * (x <= L - b)
+    shear_forces_z[interval] = np.full(x[interval].shape, R1 - P1)
+    bending_moments_y[interval] = R1 * x[interval] - P1 * (x[interval] - a)
+
+    interval = x >= L - b
+    shear_forces_z[interval] = np.full(x[interval].shape, -R2)
+    bending_moments_y[interval] = R2 * (L - x[interval])
+
+    interval = np.where(np.isclose(x, a))[0]
+    shear_forces_z[interval[0]] = R1
+    shear_forces_z[interval[1]] = R1 - P1
+
+    interval = np.where(np.isclose(x, L - b))[0]
+    shear_forces_z[interval[0]] = R1 - P1
+    shear_forces_z[interval[1]] = -R2
+
+    # Reactions
+    assert_almost_equal(node_1.results.reaction_force_z[comb], R1)
+    assert_almost_equal(node_2.results.reaction_force_z[comb], R2)
+
+    # Internal forces
+    assert_array_almost_equal(member.results.shear_forces_z[comb], shear_forces_z)
+    assert_array_almost_equal(member.results.bending_moments_y[comb], bending_moments_y)
+
+
 def test_figure_12() -> None:
     """[1, Fig. 12] Cantilever Beam - Uniformly Distributed Load."""
     model = FrameXZModel()
