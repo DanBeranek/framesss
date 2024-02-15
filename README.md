@@ -1,7 +1,7 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/_static/logo-dark-mode.png">
-  <source media="(prefers-color-scheme: light)" srcset="docs/_static/logo-light-mode.png">
-  <img alt="framesss logo" src="docs/_static/logo-light-mode.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark-mode.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/logo-light-mode.png">
+  <img alt="framesss logo" src="docs/assets/logo-light-mode.png">
 </picture>
 
 <!-- github-only-logo -->
@@ -51,7 +51,7 @@ pip install framesss
 
 ## Usage
 
-Please see the [Reference Guide] for details.
+Please see the [User Guide] for details.
 
 ## Contributing
 
@@ -82,4 +82,4 @@ This project was generated from [Statistics Norway]'s [SSB PyPI Template].
 
 [license]: https://github.com/DanBeranek/framesss/blob/main/LICENSE
 [contributor guide]: https://github.com/DanBeranek/framesss/blob/main/CONTRIBUTING.md
-[reference guide]: https://DanBeranek.github.io/framesss/reference.html
+[user guide]: https://danberanek.github.io/framesss/user_guide.html
