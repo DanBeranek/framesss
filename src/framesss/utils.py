@@ -127,7 +127,7 @@ class DictProxy:
         dict_attr = getattr(self.owner, self.dict_name)
         return repr(dict_attr) if dict_attr is not None else "None"
 
-    def get(self, key: Hashable, default: T = None) -> T | Any:
+    def get(self, key: Hashable, default: T | None = None) -> T | Any:
         """
         Return the value for a given key from the proxied dictionary.
 
