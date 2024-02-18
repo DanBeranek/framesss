@@ -17,8 +17,8 @@ if TYPE_CHECKING:
     from framesss.fea.element_1d import Element1D
     from framesss.fea.models.model import Model
     from framesss.fea.node import Node
-    from framesss.pre.cases import LoadCase
-    from framesss.pre.cases import LoadCombination
+    from framesss.pre.load_case import LoadCase
+    from framesss.pre.load_combination import LoadCombination
     from framesss.pre.member_1d import Member1D
 
 

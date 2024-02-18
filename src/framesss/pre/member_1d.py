@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
     from framesss.fea.analysis.analysis import Analysis
     from framesss.fea.models.model import Model
-    from framesss.pre.cases import LoadCase
+    from framesss.pre.load_case import LoadCase
     from framesss.pre.material import Material
     from framesss.pre.section import Section
 

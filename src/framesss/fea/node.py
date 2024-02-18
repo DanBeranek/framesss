@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     import numpy.typing as npt
 
     from framesss.fea.models.model import Model
-    from framesss.pre.cases import LoadCase
+    from framesss.pre.load_case import LoadCase
 
 
 SUPPORT_FIXITIES = [

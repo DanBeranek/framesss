@@ -9,7 +9,7 @@ from framesss.solvers.solver import Solver
 
 if TYPE_CHECKING:
     from framesss.fea.models.model import Model
-    from framesss.pre.cases import LoadCase
+    from framesss.pre.load_case import LoadCase
 
 
 class LinearStaticSolver(Solver):

@@ -8,8 +8,8 @@ if TYPE_CHECKING:
     import numpy.typing as npt
     from typing_extensions import TypeAlias
 
-    from framesss.pre.cases import LoadCase
-    from framesss.pre.cases import LoadCombination
+    from framesss.pre.load_case import LoadCase
+    from framesss.pre.load_combination import LoadCombination
     from framesss.pre.member_1d import Member1D
 
     LoadType: TypeAlias = Union[LoadCase, LoadCombination]

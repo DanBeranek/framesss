@@ -12,7 +12,7 @@ from framesss.enums import LoadCoordinateSystem
 if TYPE_CHECKING:
     import numpy.typing as npt
 
-    from framesss.pre.cases import LoadCase
+    from framesss.pre.load_case import LoadCase
     from framesss.pre.member_1d import Member1D
 
 
