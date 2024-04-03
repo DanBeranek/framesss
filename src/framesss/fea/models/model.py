@@ -40,7 +40,7 @@ class Model:
     :ivar load_cases: A set of :class:`LoadCase` instances, each defining a unique set
                       of loading conditions to be analyzed.
     :ivar load_combinations: A set of :class:`LoadCombination` instances, defining
-                             combinations of load cases for analysis.
+                             load_cases of load cases for analysis.
     :ivar elements: A set of :class:`Element1D` instances.
     :ivar neq_free: Number of equations corresponding to free DoFs.
     :ivar neq_fixed: Number of equations corresponding to fixed DoFs.

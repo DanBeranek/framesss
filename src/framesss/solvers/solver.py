@@ -121,7 +121,7 @@ class Solver(ABC):
             # Assemble member internal force arrays
             self.model.analysis.assemble_internal_forces(elem, load_case, fel)
 
-    def save_member_internal_forces(self, load_case: LoadCase) -> None:
+    def save_member_internal_forces(self, case: LoadCase | LoadCombination) -> None:
         """
         Save the internal forces for each member in the model under a specified load case.
 
@@ -131,30 +131,10 @@ class Solver(ABC):
         method of the analysis model, which takes into account both global and local effects to
         accurately determine the stresses along each member.
 
-        :param load_case: A reference to an instance of the :class:`LoadCase` class.
+        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCombination` class.
         """
         for member in self.model.members:
-            self.model.analysis.save_internal_stresses_on_member(member, load_case)
-
-    # TODO: docstring
-    def save_member_internal_forces_combination(
-        self, load_combination: LoadCombination
-    ) -> None:
-        """
-        Save the internal forces for each member in the model under a specified load case.
-
-        This method iterates over all members in the model and invokes a process to calculate and store
-        the internal stresses (forces and moments) experienced by each member due to the applied loads
-        in the given load case. The calculation is performed by the `save_internal_stresses_on_member`
-        method of the analysis model, which takes into account both global and local effects to
-        accurately determine the stresses along each member.
-
-        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
-        """
-        for member in self.model.members:
-            self.model.analysis.save_internal_stresses_on_member_combination(
-                member, load_combination
-            )
+            self.model.analysis.save_internal_stresses(member, case)
 
     def save_member_internal_displacements(self, load_case: LoadCase) -> None:
         """

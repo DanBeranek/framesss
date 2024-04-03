@@ -193,7 +193,7 @@ class LinearStaticSolver(Solver):
                     f"{i*7 + steps_cases + 2}/{n_steps} : Computing internal forces for load combination: "
                     f"'{load_combination.label}'..."
                 )
-            self.save_member_internal_forces_combination(load_combination)
+            self.save_member_internal_forces(load_combination)
 
             if verbose:
                 print(

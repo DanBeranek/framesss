@@ -91,14 +91,14 @@ class LoadCombination:
     Represent a combination of load cases.
 
     :param label: A unique identifier for the load combination.
-    :ivar combinations: A dictionary mapping :class:`LoadCase` instances
+    :ivar load_cases: A dictionary mapping :class:`LoadCase` instances
                         to their scaling factors.
     """
 
-    def __init__(self, label: str, combinations: dict[LoadCase, float]) -> None:
+    def __init__(self, label: str, load_cases: dict[LoadCase, float]) -> None:
         """Init the LoadCombination class."""
         self.label = label
-        self.combinations = combinations
+        self.load_cases = load_cases
 
     def __repr__(self) -> str:
         """Return a string representation of LoadCombination object."""
@@ -111,4 +111,4 @@ class LoadCombination:
         :param load_case: A reference to an instance of the :class:`LoadCase` class.
         :param factor: The factor for a given load case.
         """
-        self.combinations[load_case] = factor
+        self.load_cases[load_case] = factor

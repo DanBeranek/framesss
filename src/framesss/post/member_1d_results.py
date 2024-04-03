@@ -39,12 +39,14 @@ class Member1DResults:
         self.bending_moments_y: ResultDict = {}
         self.bending_moments_z: ResultDict = {}
 
-        self.extreme_axial_forces: ResultDict = {}
-        self.extreme_shear_forces_y: ResultDict = {}
-        self.extreme_shear_forces_z: ResultDict = {}
-        self.extreme_torsional_moments: ResultDict = {}
-        self.extreme_bending_moments_y: ResultDict = {}
-        self.extreme_bending_moments_z: ResultDict = {}
+        self.peak_x_local: ResultDict = {}
+
+        self.peak_axial_forces: ResultDict = {}
+        self.peak_shear_forces_y: ResultDict = {}
+        self.peak_shear_forces_z: ResultDict = {}
+        self.peak_torsional_moments: ResultDict = {}
+        self.peak_bending_moments_y: ResultDict = {}
+        self.peak_bending_moments_z: ResultDict = {}
 
         self.min_max_axial_forces: ResultDict = {}
         self.min_max_shear_forces_y: ResultDict = {}

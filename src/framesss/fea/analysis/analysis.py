@@ -207,8 +207,8 @@ class Analysis(ABC):
         pass
 
     @abstractmethod
-    def save_internal_stresses_on_member(
-        self, member: Member1D, load_case: LoadCase
+    def save_internal_stresses(
+        self, member: Member1D, case: LoadCase | LoadCombination
     ) -> None:
         """
         Compute and save the internal stresses.
@@ -219,26 +219,7 @@ class Analysis(ABC):
 
         This method aggregates internal stress data from each :class:`Element1D` of the :class:`Member1D`.
         :param member: A reference to an instance of the :class:`Member1D` class.
-        :param load_case: A reference to an instance of the :class:`LoadCase` class.
-        """
-        pass
-
-    @abstractmethod
-    def save_internal_stresses_on_member_combination(
-        self, member: Member1D, load_combination: LoadCombination
-    ) -> None:
-        """
-        Compute and save internal stresses.
-
-        Computes and saves the internal stresses (axial forces, shear forces, and bending moments)
-        for a member under a specified load case. This includes both detailed distributions
-        along the member and extreme values for each stress component.
-
-        This method aggregates internal stress data from each :class:`Element1D` of the :class:`Member1D`,
-        including axial forces, shear forces in the Z direction, and bending moments about the Y axis.
-
-        :param member: A reference to an instance of the :class:`Member1D` class.
-        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCombination` class.
         """
         pass
 
