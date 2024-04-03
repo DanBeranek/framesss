@@ -183,11 +183,11 @@ class FrameXZAnalysis(Analysis):
         :param load_case: A reference to an instance of the :class:`LoadCase` class.
         :param fel: The internal force vector in local system for the element.
         """
-        element.axial_force[load_case] = fel[[0, 3]]
+        element.end_axial_forces[load_case] = fel[[0, 3]]
 
-        element.bending_moment_y[load_case] = fel[[1, 4]]
+        element.end_bending_moments_y[load_case] = fel[[1, 4]]
 
-        element.shear_force_z[load_case] = fel[[2, 5]]
+        element.end_shear_forces_z[load_case] = fel[[2, 5]]
 
     def get_displacement_shape_function_matrix(
         self, element: Element1D

@@ -57,10 +57,10 @@ class Element1D:
     :ivar stiffness_matrix_local: The element's stiffness matrix in the local coordinate system,
                                   initially None until computed.
     :ivar global_dofs: Global degrees of freedom indices for the element, initially None until set.
-    :ivar axial_force, shear_force_y, shear_force_z: Dictionaries mapping each LoadCase to the respective internal
-                                                     force at the start of the element.
-    :ivar torsional_moment, bending_moment_y, bending_moment_z: Dictionaries mapping each LoadCase to the respective
-                                                                internal moment at the start of the element.
+    :ivar end_axial_forces, end_shear_forces_y, end_shear_forces_z: Dictionaries mapping each LoadCase to the
+                            respective internal force at the start of the element.
+    :ivar end_torsional_moments, end_bending_moments_y, end_bending_moments_z: Dictionaries mapping each
+                            LoadCase to the respective internal moment at the start of the element.
     """
 
     def __init__(
@@ -121,12 +121,12 @@ class Element1D:
         )
         self.global_dofs: npt.NDArray[np.int64] = np.empty(0, dtype=np.int64)
 
-        self.axial_force: dict[LoadCase, npt.NDArray[np.float64]] = {}
-        self.shear_force_y: dict[LoadCase, npt.NDArray[np.float64]] = {}
-        self.shear_force_z: dict[LoadCase, npt.NDArray[np.float64]] = {}
-        self.torsional_moment: dict[LoadCase, npt.NDArray[np.float64]] = {}
-        self.bending_moment_y: dict[LoadCase, npt.NDArray[np.float64]] = {}
-        self.bending_moment_z: dict[LoadCase, npt.NDArray[np.float64]] = {}
+        self.end_axial_forces: dict[LoadCase, npt.NDArray[np.float64]] = {}
+        self.end_shear_forces_y: dict[LoadCase, npt.NDArray[np.float64]] = {}
+        self.end_shear_forces_z: dict[LoadCase, npt.NDArray[np.float64]] = {}
+        self.end_torsional_moments: dict[LoadCase, npt.NDArray[np.float64]] = {}
+        self.end_bending_moments_y: dict[LoadCase, npt.NDArray[np.float64]] = {}
+        self.end_bending_moments_z: dict[LoadCase, npt.NDArray[np.float64]] = {}
 
     def __repr__(self) -> str:
         """Return a string representation of the element."""
@@ -684,7 +684,7 @@ class Element1D:
         :param load_case: A reference to an instance of the :class:`LoadCase` class.
         :return: A tuple of three floats representing the coefficients of the axial force equation.
         """
-        n_start = -self.axial_force[load_case][0]
+        n_start = -self.end_axial_forces[load_case][0]
 
         if abs(n_start) < NUMERIC_GARBAGE:
             n_start = 0.0
@@ -723,7 +723,7 @@ class Element1D:
         # if (self.member.analysis.analysis_type == AnalysisModelType.TRUSS_XZ) or (
         #     self.member.analysis.analysis_type == AnalysisModelType.TRUSS_XYZ
         # ):
-        #     return -self.axial_force[load_case][0]
+        #     return -self.end_axial_forces[load_case][0]
 
         a, b, c = self.get_axial_equation_coefficients(load_case)
 
@@ -760,7 +760,7 @@ class Element1D:
         :param load_case: A reference to an instance of the :class:`LoadCase` class.
         :return: A tuple of three floats representing the coefficients of the shear force equation.
         """
-        shear_start = +self.shear_force_y[load_case][0]
+        shear_start = +self.end_shear_forces_y[load_case][0]
 
         if abs(shear_start) < NUMERIC_GARBAGE:
             shear_start = 0.0
@@ -825,7 +825,7 @@ class Element1D:
         :param load_case: A reference to an instance of the :class:`LoadCase` class.
         :return: A tuple of three floats representing the coefficients of the shear force equation.
         """
-        shear_start = +self.shear_force_z[load_case][0]
+        shear_start = +self.end_shear_forces_z[load_case][0]
 
         if abs(shear_start) < NUMERIC_GARBAGE:
             shear_start = 0.0
@@ -890,8 +890,8 @@ class Element1D:
         :param load_case: A reference to an instance of the :class:`LoadCase` class.
         :return: A tuple of four floats representing the coefficients of the bending moment equation.
         """
-        moment_start = float(-self.bending_moment_z[load_case][0])
-        shear_start = float(+self.shear_force_y[load_case][0])
+        moment_start = float(-self.end_bending_moments_z[load_case][0])
+        shear_start = float(+self.end_shear_forces_y[load_case][0])
 
         if abs(moment_start) < NUMERIC_GARBAGE:
             moment_start = 0.0
@@ -959,8 +959,8 @@ class Element1D:
         :param load_case: A reference to an instance of the :class:`LoadCase` class.
         :return: A tuple of four floats representing the coefficients of the bending moment equation.
         """
-        moment_start = float(+self.bending_moment_y[load_case][0])
-        shear_start = float(+self.shear_force_z[load_case][0])
+        moment_start = float(+self.end_bending_moments_y[load_case][0])
+        shear_start = float(+self.end_shear_forces_z[load_case][0])
 
         if abs(moment_start) < NUMERIC_GARBAGE:
             moment_start = 0.0
