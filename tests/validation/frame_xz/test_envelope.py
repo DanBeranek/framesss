@@ -11,7 +11,7 @@ F = 2  # Force
 E = 210.0e9  # Elastic modulus
 I = 2.0e-3  # Second moment of inertia
 DUMMY_MAT = Material("foo", E, 1, 1, 1)
-DUMMY_SEC = Section("bar", 1, 1, 1, 1, I, 1, 1, 1)
+DUMMY_SEC = Section("bar", 1, 1, 1, 1, I, 1, 1, 1, DUMMY_MAT)
 
 
 def test_simple_beam_3_point_loads() -> None:
@@ -23,7 +23,7 @@ def test_simple_beam_3_point_loads() -> None:
     node_2 = model.add_node(
         "N2", [L], ["free", "free", "fixed", "free", "free", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
 
     lc1 = model.add_load_case("LC1")
     member.add_point_load(

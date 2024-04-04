@@ -196,7 +196,7 @@ class Element1D:
         """
         Return element internal actions related to the :class:`LoadCase`.
 
-        :param case: A reference to an instance of the :class:`LoadCase` class.
+        :param load_case: A reference to an instance of the :class:`LoadCase` class.
         :return: Internal force vector.
         :raise ValueError: If 'u_global' is None for the case.
         """
@@ -218,11 +218,10 @@ class Element1D:
 
         :return kea: A 2x2 matrix with axial stiffness coefficients.
         """
-        E = self.member.material.elastic_modulus
-        A = self.member.section.area_x
+        EA = self.member.section.EA
         L = self.length
 
-        k11 = E * A / L
+        k11 = EA / L
 
         kea = k11 * np.array([[+1, -1], [-1, +1]])
 
@@ -234,14 +233,13 @@ class Element1D:
 
         :return ket: A 2x2 matrix with torsion stiffness coefficients.
         """
-        G = self.member.material.shear_modulus
-        Jt = self.member.section.inertia_x
+        GJ = self.member.section.GJt
         L = self.length
 
         if (self.hinge_start == BeamConnection.CONTINUOUS_END) and (
             self.hinge_end == BeamConnection.CONTINUOUS_END
         ):
-            k11 = G * Jt / L
+            k11 = GJ / L
 
             ket = k11 * np.array([[+1, -1], [-1, +1]])
 
@@ -256,18 +254,15 @@ class Element1D:
 
         :return kef: A 4x4 matrix with flexural stiffness coefficients.
         """
-        E = self.member.material.elastic_modulus
-        I = self.member.section.inertia_z  # noqa: E741
+        EI = self.member.section.EIz
         L = self.length
-        EI = E * I
 
         if self.member.element_type == Element1DType.NAVIER:
             Omega = 0.0
         elif self.member.element_type == Element1DType.TIMOSHENKO:
-            G = self.member.material.shear_modulus
-            As = self.member.section.area_y
+            GA = self.member.section.GAy
 
-            Omega = EI / (G * As * L * L)
+            Omega = EI / (GA * L * L)
         else:
             raise ValueError(f"Unknown member type: {self.member.element_type}.")
 
@@ -351,18 +346,15 @@ class Element1D:
 
         :return kef: A 4x4 matrix with flexural stiffness coefficients.
         """
-        E = self.member.material.elastic_modulus
-        I = self.member.section.inertia_y  # noqa: E741
+        EI = self.member.section.EIy
         L = self.length
-        EI = E * I
 
         if self.member.element_type == Element1DType.NAVIER:
             Omega = 0.0
         elif self.member.element_type == Element1DType.TIMOSHENKO:
-            G = self.member.material.shear_modulus
-            As = self.member.section.area_z
+            GA = self.member.section.GAz
 
-            Omega = EI / (G * As * L * L)
+            Omega = EI / (GA * L * L)
         else:
             raise ValueError(f"Unknown member type: {self.member.element_type}.")
 
@@ -454,7 +446,7 @@ class Element1D:
                  shape functions at the specified position(s).
         """
         L = self.length
-        # TODO: Transpose the solution?
+
         return np.array([1 - x / L, x / L])
 
     def get_flexural_xy_displacement_shape_functions(
@@ -479,12 +471,10 @@ class Element1D:
         if self.member.element_type == Element1DType.NAVIER:
             Omega = 0.0
         elif self.member.element_type == Element1DType.TIMOSHENKO:
-            E = self.member.material.elastic_modulus
-            G = self.member.material.shear_modulus
-            As = self.member.section.area_y
-            I = self.member.section.inertia_z  # noqa: E741
+            EI = self.member.section.EIz
+            GA = self.member.section.GAy
 
-            Omega = E * I / (G * As * L * L)
+            Omega = EI / (GA * L * L)
         else:
             raise ValueError(f"Unknown member type: {self.member.element_type}.")
 
@@ -586,12 +576,10 @@ class Element1D:
         if self.member.element_type == Element1DType.NAVIER:
             Omega = 0.0
         elif self.member.element_type == Element1DType.TIMOSHENKO:
-            E = self.member.material.elastic_modulus
-            G = self.member.material.shear_modulus
-            As = self.member.section.area_z
-            I = self.member.section.inertia_y  # noqa: E741
+            EI = self.member.section.EIy
+            GA = self.member.section.GAz
 
-            Omega = E * I / (G * As * L * L)
+            Omega = EI / (GA * L * L)
         else:
             raise ValueError(f"Unknown member type: {self.member.element_type}.")
 
@@ -681,7 +669,7 @@ class Element1D:
         vector in local system at a given cross-section position,
         from the global analysis (from nodal displacements and rotations).
 
-        :param case: handle to an object of the LoadCase
+        :param load_case: handle to an object of the LoadCase
         :return del: member internal displacements vector at given cross-section positions
         """
         # Get nodal displacements and rotations at member end nodes in global system

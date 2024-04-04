@@ -117,7 +117,7 @@ class DistributedLoad(ElementLoad):
 
     def get_axial_fixed_end_forces(self) -> npt.NDArray[np.float64]:
         """
-        Return axial fixed end force vector..
+        Return axial fixed end force vector.
 
         The forces are calculated and returned in the local coordinate system of the element.
 
@@ -169,12 +169,14 @@ class DistributedLoad(ElementLoad):
                 Omega = 0.0
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
-                E = self.element.member.material.elastic_modulus
-                G = self.element.member.material.shear_modulus
-                As = self.element.member.section.area_y
-                I = self.element.member.section.inertia_z
+                EI = self.element.member.section.EIz
+                GA = self.element.member.section.GAy
 
-                Omega = E * I / (G * As * L2)
+                Omega = EI / (GA * L2)
+            else:
+                raise AttributeError(
+                    f"Wrong element type: {self.element.member.element_type}"
+                )
 
             # Auxiliary parameters
             mu = 1 + 12 * Omega
@@ -262,6 +264,11 @@ class DistributedLoad(ElementLoad):
                     ]
                 )
 
+            else:
+                raise AttributeError(
+                    f"Wrong hinge type: {self.element.hinge_start}, {self.element.hinge_end}"
+                )
+
         else:
             fef_flex = np.zeros([4])
 
@@ -287,12 +294,10 @@ class DistributedLoad(ElementLoad):
                 Omega = 0.0
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
-                E = self.element.member.material.elastic_modulus
-                G = self.element.member.material.shear_modulus
-                As = self.element.member.section.area_z
-                I = self.element.member.section.inertia_y
+                EI = self.element.member.section.EIy
+                GA = self.element.member.section.GAz
 
-                Omega = E * I / (G * As * L2)
+                Omega = EI / (GA * L2)
 
             else:
                 raise ValueError(
@@ -383,6 +388,11 @@ class DistributedLoad(ElementLoad):
                     ]
                 )
 
+            else:
+                raise AttributeError(
+                    f"Wrong hinge type: {self.element.hinge_start}, {self.element.hinge_end}"
+                )
+
         else:
             fef_flex = np.zeros([4])
 
@@ -404,11 +414,8 @@ class DistributedLoad(ElementLoad):
 
         # Check if transversal load is not null over member
         if fx_start or fx_end:
-            E = self.element.member.material.elastic_modulus
-            A = self.element.member.section.area_x
+            EA = self.element.member.section.EA
             L = self.element.length
-
-            EA = E * A
 
             # Separate uniform portion from linear partition of axial load
             fx_uniform = fx_start
@@ -442,11 +449,9 @@ class DistributedLoad(ElementLoad):
         # Check if transversal load is not null over the member
         if fy_start or fy_end:
             # Basic member properties
-            E = self.element.member.material.elastic_modulus
-            I = self.element.member.section.inertia_z
+            EI = self.element.member.section.EIz
             L = self.element.length
 
-            EI = E * I
             L2 = L * L
             L3 = L2 * L
 
@@ -455,10 +460,14 @@ class DistributedLoad(ElementLoad):
                 Omega = 0.0
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
-                G = self.element.member.material.shear_modulus
-                As = self.element.member.section.area_y
+                GA = self.element.member.section.GAy
 
-                Omega = EI / (G * As * L2)
+                Omega = EI / (GA * L2)
+
+            else:
+                raise AttributeError(
+                    f"Wrong element type: {self.element.member.element_type}"
+                )
 
             # Auxiliary parameters
             mu = 1 + 12 * Omega
@@ -574,6 +583,11 @@ class DistributedLoad(ElementLoad):
                     )
                 )
 
+            else:
+                raise AttributeError(
+                    f"Wrong hinge type: {self.element.hinge_start}, {self.element.hinge_end}"
+                )
+
             v = v_uniform + v_linear
 
         else:
@@ -598,11 +612,9 @@ class DistributedLoad(ElementLoad):
         # Check if transversal load is not null over the member
         if fz_start or fz_end:
             # Basic member properties
-            E = self.element.member.material.elastic_modulus
-            I = self.element.member.section.inertia_y
+            EI = self.element.member.section.EIy
             L = self.element.length
 
-            EI = E * I
             L2 = L * L
             L3 = L2 * L
 
@@ -611,10 +623,14 @@ class DistributedLoad(ElementLoad):
                 Omega = 0.0
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
-                G = self.element.member.material.shear_modulus
-                As = self.element.member.section.area_z
+                GA = self.element.member.section.GAz
 
-                Omega = EI / (G * As * L2)
+                Omega = EI / (GA * L2)
+
+            else:
+                raise AttributeError(
+                    f"Wrong element type: {self.element.member.element_type}"
+                )
 
             # Auxiliary parameters
             mu = 1 + 12 * Omega
@@ -730,6 +746,11 @@ class DistributedLoad(ElementLoad):
                     )
                 )
 
+            else:
+                raise AttributeError(
+                    f"Wrong hinge type: {self.element.hinge_start}, {self.element.hinge_end}"
+                )
+
             w = w_uniform + w_linear
 
         else:
@@ -776,15 +797,14 @@ class ThermalLoad(ElementLoad):
         dtx = self.temperature_gradients[0]
 
         if dtx:
-            E = self.element.member.material.elastic_modulus
-            alpha = self.element.member.material.thermal_expansion_coefficient
-            A = self.element.member.section.area_x
+            EA = self.element.member.section.EA
+            alpha = self.element.member.section.material.thermal_expansion_coefficient
 
             # Calculate fixed end forces
             fef_axial = np.array(
                 [
-                    E * A * alpha * dtx,
-                    -E * A * alpha * dtx,
+                    EA * alpha * dtx,
+                    -EA * alpha * dtx,
                 ]
             )
 
@@ -804,22 +824,24 @@ class ThermalLoad(ElementLoad):
 
         if dty:
             # Basic member properties
-            E = self.element.member.material.elastic_modulus
-            alpha = self.element.member.material.thermal_expansion_coefficient
-            I = self.element.member.section.inertia_z
+            alpha = self.element.member.section.material.thermal_expansion_coefficient
             h = self.element.member.section.height_y
             L = self.element.length
-            EI = E * I
+            EI = self.element.member.section.EIz
 
             # Timoshenko parameter
             if self.element.member.element_type == Element1DType.NAVIER:
                 Omega = 0.0
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
-                G = self.element.member.material.shear_modulus
-                As = self.element.member.section.area_y
+                GA = self.element.member.section.GAy
 
-                Omega = E * I / (G * As * L * L)
+                Omega = EI / (GA * L * L)
+
+            else:
+                raise AttributeError(
+                    f"Wrong element type: {self.element.member.element_type}"
+                )
 
             # Auxiliary parameter
             lamb = 1 + 3 * Omega
@@ -866,6 +888,11 @@ class ThermalLoad(ElementLoad):
             ):
                 fef_flex = np.zeros(4)
 
+            else:
+                raise AttributeError(
+                    f"Wrong hinge type: {self.element.hinge_start}, {self.element.hinge_end}"
+                )
+
         else:
             fef_flex = np.zeros(4)
 
@@ -882,22 +909,25 @@ class ThermalLoad(ElementLoad):
 
         if dtz:
             # Basic member properties
-            E = self.element.member.material.elastic_modulus
-            alpha = self.element.member.material.thermal_expansion_coefficient
-            I = self.element.member.section.inertia_y
+            alpha = self.element.member.section.material.thermal_expansion_coefficient
             h = self.element.member.section.height_z
             L = self.element.length
-            EI = E * I
+            EI = self.element.member.section.EIy
 
             # Timoshenko parameter
             if self.element.member.element_type == Element1DType.NAVIER:
                 Omega = 0.0
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
-                G = self.element.member.material.shear_modulus
-                As = self.element.member.section.area_z
 
-                Omega = E * I / (G * As * L * L)
+                GA = self.element.member.section.GAz
+
+                Omega = EI / (GA * L * L)
+
+            else:
+                raise AttributeError(
+                    f"Wrong element type: {self.element.member.element_type}"
+                )
 
             # Auxiliary parameter
             lamb = 1 + 3 * Omega
@@ -944,6 +974,11 @@ class ThermalLoad(ElementLoad):
             ):
                 fef_flex = np.zeros(4)
 
+            else:
+                raise AttributeError(
+                    f"Wrong hinge type: {self.element.hinge_start}, {self.element.hinge_end}"
+                )
+
         else:
             fef_flex = np.zeros(4)
 
@@ -980,7 +1015,7 @@ class ThermalLoad(ElementLoad):
         # Check if temperature gradient is not null
         if dty:
             # Basic member properties
-            alpha = self.element.member.material.thermal_expansion_coefficient
+            alpha = self.element.member.section.material.thermal_expansion_coefficient
             h = self.element.member.section.height_y
             L = self.element.length
 
@@ -989,12 +1024,15 @@ class ThermalLoad(ElementLoad):
                 Omega = 0.0
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
-                E = self.element.member.material.elastic_modulus
-                G = self.element.member.material.shear_modulus
-                As = self.element.member.section.area_y
-                I = self.element.member.section.inertia_z
+                EI = self.element.member.section.EIz
+                GA = self.element.member.section.GAy
 
-                Omega = E * I / (G * As * L * L)
+                Omega = EI / (GA * L * L)
+
+            else:
+                raise AttributeError(
+                    f"Wrong element type: {self.element.member.element_type}"
+                )
 
             # Auxiliary parameters
             mu = 1 + 12 * Omega
@@ -1037,6 +1075,11 @@ class ThermalLoad(ElementLoad):
             ):
                 v = tg * (-L * x / 2 + x**2 / 2)
 
+            else:
+                raise AttributeError(
+                    f"Wrong hinge type: {self.element.hinge_start}, {self.element.hinge_end}"
+                )
+
         else:
             v = np.zeros(x.shape)
 
@@ -1058,7 +1101,7 @@ class ThermalLoad(ElementLoad):
         # Check if temperature gradient is not null
         if dtz:
             # Basic member properties
-            alpha = self.element.member.material.thermal_expansion_coefficient
+            alpha = self.element.member.section.material.thermal_expansion_coefficient
             h = self.element.member.section.height_z
             L = self.element.length
 
@@ -1067,12 +1110,15 @@ class ThermalLoad(ElementLoad):
                 Omega = 0.0
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
-                E = self.element.member.material.elastic_modulus
-                G = self.element.member.material.shear_modulus
-                As = self.element.member.section.area_z
-                I = self.element.member.section.inertia_y
+                EI = self.element.member.section.EIy
+                GA = self.element.member.section.GAz
 
-                Omega = E * I / (G * As * L * L)
+                Omega = EI / (GA * L * L)
+
+            else:
+                raise AttributeError(
+                    f"Wrong element type: {self.element.member.element_type}"
+                )
 
             # Auxiliary parameters
             mu = 1 + 12 * Omega
@@ -1114,6 +1160,11 @@ class ThermalLoad(ElementLoad):
                 and self.element.hinge_end == BeamConnection.HINGED_END
             ):
                 w = tg * (-L * x / 2 + x**2 / 2)
+
+            else:
+                raise AttributeError(
+                    f"Wrong hinge type: {self.element.hinge_start}, {self.element.hinge_end}"
+                )
 
         else:
             w = np.zeros(x.shape)

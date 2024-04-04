@@ -26,7 +26,9 @@ def test_example_5_2() -> None:
     direction taken from [2] are multiplied by -1.
     """
     material = Material("test", 30.0e6, 0.2, 1, 0)
-    section = Section("test", 4.0e-3, 4.0e-3, 4.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1, 1)
+    section = Section(
+        "test", 4.0e-3, 4.0e-3, 4.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1, 1, material
+    )
 
     model = FrameXZModel()
 
@@ -45,17 +47,17 @@ def test_example_5_2() -> None:
         "N6", [0, 0, 5.5], ["free", "free", "fixed", "free", "free", "free"]
     )
 
-    member_12 = model.add_member("1-2", "navier", [node_1, node_2], material, section)
+    member_12 = model.add_member("1-2", "navier", [node_1, node_2], section)
     member_23 = model.add_member(
-        "2-3", "navier", [node_2, node_3], material, section, ["fixed", "hinged"]
+        "2-3", "navier", [node_2, node_3], section, ["fixed", "hinged"]
     )
     member_34 = model.add_member(
-        "3-4", "navier", [node_3, node_4], material, section, ["hinged", "fixed"]
+        "3-4", "navier", [node_3, node_4], section, ["hinged", "fixed"]
     )
     member_35 = model.add_member(
-        "3-5", "navier", [node_3, node_5], material, section, ["hinged", "fixed"]
+        "3-5", "navier", [node_3, node_5], section, ["hinged", "fixed"]
     )
-    member_65 = model.add_member("6-5", "navier", [node_6, node_5], material, section)
+    member_65 = model.add_member("6-5", "navier", [node_6, node_5], section)
 
     lc = model.add_load_case("LC1")
 
@@ -146,7 +148,9 @@ def test_example_5_2_combinations() -> None:
     direction taken from [2] are multiplied by -1.
     """
     material = Material("test", 30.0e6, 0.2, 1, 0)
-    section = Section("test", 4.0e-3, 4.0e-3, 4.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1, 1)
+    section = Section(
+        "test", 4.0e-3, 4.0e-3, 4.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1, 1, material
+    )
 
     model = FrameXZModel()
 
@@ -165,17 +169,17 @@ def test_example_5_2_combinations() -> None:
         "N6", [0, 0, 5.5], ["free", "free", "fixed", "free", "free", "free"]
     )
 
-    member_12 = model.add_member("1-2", "navier", [node_1, node_2], material, section)
+    member_12 = model.add_member("1-2", "navier", [node_1, node_2], section)
     member_23 = model.add_member(
-        "2-3", "navier", [node_2, node_3], material, section, ["fixed", "hinged"]
+        "2-3", "navier", [node_2, node_3], section, ["fixed", "hinged"]
     )
     member_34 = model.add_member(
-        "3-4", "navier", [node_3, node_4], material, section, ["hinged", "fixed"]
+        "3-4", "navier", [node_3, node_4], section, ["hinged", "fixed"]
     )
     member_35 = model.add_member(
-        "3-5", "navier", [node_3, node_5], material, section, ["hinged", "fixed"]
+        "3-5", "navier", [node_3, node_5], section, ["hinged", "fixed"]
     )
-    member_65 = model.add_member("6-5", "navier", [node_6, node_5], material, section)
+    member_65 = model.add_member("6-5", "navier", [node_6, node_5], section)
 
     lc1 = model.add_load_case("LC1")
     f1 = 2
@@ -270,7 +274,7 @@ def test_example_5_2_combinations() -> None:
 def test_example_5_3() -> None:
     """[2, Ex. 5.3] Frame under thermal load with prescribed displacements."""
     material = Material("test", 20.0e3, 0.2, 12.0e-6, 0)
-    section = Section("test", 5, 5, 5, 1, 1, 1, 0.3, 0.3)
+    section = Section("test", 5, 5, 5, 1, 1, 1, 0.3, 0.3, material)
 
     model = FrameXZModel()
 
@@ -285,12 +289,12 @@ def test_example_5_3() -> None:
         "4", [8, 0, -4], fixity=["fixed", "free", "fixed", "free", "fixed", "free"]
     )
 
-    member_12 = model.add_member("1-2", "navier", [node_1, node_2], material, section)
+    member_12 = model.add_member("1-2", "navier", [node_1, node_2], section)
     member_32 = model.add_member(
-        "3-2", "navier", [node_3, node_2], material, section, ["fixed", "fixed"]
+        "3-2", "navier", [node_3, node_2], section, ["fixed", "fixed"]
     )
     member_34 = model.add_member(
-        "3-4", "navier", [node_3, node_4], material, section, ["hinged", "fixed"]
+        "3-4", "navier", [node_3, node_4], section, ["hinged", "fixed"]
     )
 
     lc = model.add_load_case("LC1")
@@ -351,7 +355,7 @@ def test_example_5_3() -> None:
 def test_example_5_3_combinations() -> None:
     """[2, Ex. 5.3] Frame under thermal load with prescribed displacements."""
     material = Material("test", 20.0e3, 0.2, 12.0e-6, 0)
-    section = Section("test", 5, 5, 5, 1, 1, 1, 0.3, 0.3)
+    section = Section("test", 5, 5, 5, 1, 1, 1, 0.3, 0.3, material)
 
     model = FrameXZModel()
 
@@ -366,12 +370,12 @@ def test_example_5_3_combinations() -> None:
         "4", [8, 0, -4], fixity=["fixed", "free", "fixed", "free", "fixed", "free"]
     )
 
-    member_12 = model.add_member("1-2", "navier", [node_1, node_2], material, section)
+    member_12 = model.add_member("1-2", "navier", [node_1, node_2], section)
     member_32 = model.add_member(
-        "3-2", "navier", [node_3, node_2], material, section, ["fixed", "fixed"]
+        "3-2", "navier", [node_3, node_2], section, ["fixed", "fixed"]
     )
     member_34 = model.add_member(
-        "3-4", "navier", [node_3, node_4], material, section, ["hinged", "fixed"]
+        "3-4", "navier", [node_3, node_4], section, ["hinged", "fixed"]
     )
 
     lc1 = model.add_load_case("LC1")
@@ -440,7 +444,9 @@ def test_example_5_3_combinations() -> None:
 def test_example_5_4() -> None:
     """[2, Ex. 5.4] Symmetric frame under force load with prescribed displacements."""
     material = Material("test", 30.0e6, 0.2, 12.0e-6, 0)
-    section = Section("test", 4.0e-3, 4.0e-3, 4.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1, 1)
+    section = Section(
+        "test", 4.0e-3, 4.0e-3, 4.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1, 1, material
+    )
 
     model = FrameXZModel()
 
@@ -454,17 +460,17 @@ def test_example_5_4() -> None:
     node_5 = model.add_node("5", [6, 0, 4])
     node_6 = model.add_node("6", [9, 0, 4], fixity=vertical_roller)
 
-    member_14 = model.add_member("1-4", "navier", [node_1, node_4], material, section)
+    member_14 = model.add_member("1-4", "navier", [node_1, node_4], section)
     member_45 = model.add_member(
-        "4-5", "navier", [node_4, node_5], material, section, hinges=["fixed", "hinged"]
+        "4-5", "navier", [node_4, node_5], section, hinges=["fixed", "hinged"]
     )
     member_25 = model.add_member(
-        "2-5", "navier", [node_2, node_5], material, section, hinges=["fixed", "hinged"]
+        "2-5", "navier", [node_2, node_5], section, hinges=["fixed", "hinged"]
     )
     member_56 = model.add_member(
-        "5-6", "navier", [node_5, node_6], material, section, hinges=["hinged", "fixed"]
+        "5-6", "navier", [node_5, node_6], section, hinges=["hinged", "fixed"]
     )
-    member_63 = model.add_member("6-3", "navier", [node_6, node_3], material, section)
+    member_63 = model.add_member("6-3", "navier", [node_6, node_3], section)
 
     lc = model.add_load_case("LC1")
 
@@ -553,7 +559,9 @@ def test_example_5_4() -> None:
 def test_example_5_4_combinations() -> None:
     """[2, Ex. 5.4] Symmetric frame under force load with prescribed displacements."""
     material = Material("test", 30.0e6, 0.2, 12.0e-6, 0)
-    section = Section("test", 4.0e-3, 4.0e-3, 4.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1, 1)
+    section = Section(
+        "test", 4.0e-3, 4.0e-3, 4.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1, 1, material
+    )
 
     model = FrameXZModel()
 
@@ -567,17 +575,17 @@ def test_example_5_4_combinations() -> None:
     node_5 = model.add_node("5", [6, 0, 4])
     node_6 = model.add_node("6", [9, 0, 4], fixity=vertical_roller)
 
-    member_14 = model.add_member("1-4", "navier", [node_1, node_4], material, section)
+    member_14 = model.add_member("1-4", "navier", [node_1, node_4], section)
     member_45 = model.add_member(
-        "4-5", "navier", [node_4, node_5], material, section, hinges=["fixed", "hinged"]
+        "4-5", "navier", [node_4, node_5], section, hinges=["fixed", "hinged"]
     )
     member_25 = model.add_member(
-        "2-5", "navier", [node_2, node_5], material, section, hinges=["fixed", "hinged"]
+        "2-5", "navier", [node_2, node_5], section, hinges=["fixed", "hinged"]
     )
     member_56 = model.add_member(
-        "5-6", "navier", [node_5, node_6], material, section, hinges=["hinged", "fixed"]
+        "5-6", "navier", [node_5, node_6], section, hinges=["hinged", "fixed"]
     )
-    member_63 = model.add_member("6-3", "navier", [node_6, node_3], material, section)
+    member_63 = model.add_member("6-3", "navier", [node_6, node_3], section)
 
     lc1 = model.add_load_case("LC1")
     f1 = 5

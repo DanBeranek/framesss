@@ -26,7 +26,6 @@ if TYPE_CHECKING:
     from framesss.fea.analysis.analysis import Analysis
     from framesss.fea.models.model import Model
     from framesss.pre.cases import LoadCase
-    from framesss.pre.material import Material
     from framesss.pre.section import Section
 
 MAX_DISTANCE_BETWEEN_SAMPLING_POINTS = 0.1  # (m)
@@ -57,7 +56,6 @@ class Member1D:
     :param label: A user-defined identifier for the member.
     :param element_type: Specifies the type of the element ('navier', 'timoshenko').
     :param nodes: The nodes at the ends of the member.
-    :param material: The material of the member.
     :param section: The cross-section of the member.
     :param hinges: Defines the type of connections at the start and the end of the  member
                    (e.g., fixed, hinged, or semirigid) to model the rotational stiffness accurately.
@@ -85,7 +83,6 @@ class Member1D:
         label: str,
         element_type: str,
         nodes: list[Node],
-        material: Material,
         section: Section,
         hinges: list[str] | list[BeamConnection],
         auxiliary_vector_xy_plane: npt.NDArray[np.float64],
@@ -96,7 +93,6 @@ class Member1D:
         self.label = label
         self.element_type = Element1DType(element_type)
         self.analysis = analysis
-        self.material = material
         self.section = section
         self.nodes = nodes
         self.hinge_start, self.hinge_end = (BeamConnection(hng) for hng in hinges)
@@ -150,7 +146,6 @@ class Member1D:
             f"label='{self.label}', "
             f"element_type='{self.element_type}', "
             f"nodes={node_labels}, "
-            f"material='{self.material.label}', "
             f"section='{self.section.label}', "
             f"length={self.length:.2f}, "
             f"hinges={hinge_descriptions}, "

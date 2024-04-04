@@ -131,7 +131,6 @@ class Model:
         label: str,
         element_type: str,
         nodes: list[Node],
-        material: Material,
         section: Section,
         hinges: list[str] | tuple[str, str] = (BeamConnection.CONTINUOUS_END,) * 2,
     ) -> Member1D:
@@ -141,7 +140,6 @@ class Model:
         :param label: A user-defined label for the member.
         :param element_type: Specifies the type of the element ('navier', 'timoshenko').
         :param nodes: A list of nodes at the start and the end of the member.
-        :param material: The material of the member.
         :param section: The cross-section of the member.
         :param hinges: Defines the type of connections at the start and the end of the  member
                        (e.g., fixed, hinged, or semirigid) to model the rotational stiffness accurately.
@@ -154,7 +152,6 @@ class Model:
             label,
             elem_type,
             nodes,
-            material,
             section,
             hngs,
             aux,
