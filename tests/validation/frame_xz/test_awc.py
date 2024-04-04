@@ -483,7 +483,7 @@ def test_figure_7() -> None:
     solver = LinearStaticSolver(model)
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P], load_case, x=0.5)
+    member.add_point_load([0, 0, -P, 0, 0, 0], load_case, x=0.5)
 
     solver = LinearStaticSolver(model)
     solver.solve()
@@ -559,7 +559,9 @@ def test_figure_8() -> None:
     a, b = a1, b1
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P], load_case, x=a, coordinate_definition="absolute")
+    member.add_point_load(
+        [0, 0, -P, 0, 0, 0], load_case, x=a, coordinate_definition="absolute"
+    )
 
     solver = LinearStaticSolver(model)
     solver.solve()
@@ -639,9 +641,11 @@ def test_figure_9() -> None:
     a = 0.3
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P], load_case, x=a, coordinate_definition="absolute")
-    member.add_point_force(
-        [0, 0, -P], load_case, x=L - a, coordinate_definition="absolute"
+    member.add_point_load(
+        [0, 0, -P, 0, 0, 0], load_case, x=a, coordinate_definition="absolute"
+    )
+    member.add_point_load(
+        [0, 0, -P, 0, 0, 0], load_case, x=L - a, coordinate_definition="absolute"
     )
 
     solver = LinearStaticSolver(model)
@@ -731,9 +735,11 @@ def test_figure_10() -> None:
     a, b = a2, b2
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P], load_case, x=a, coordinate_definition="absolute")
-    member.add_point_force(
-        [0, 0, -P], load_case, x=L - b, coordinate_definition="absolute"
+    member.add_point_load(
+        [0, 0, -P, 0, 0, 0], load_case, x=a, coordinate_definition="absolute"
+    )
+    member.add_point_load(
+        [0, 0, -P, 0, 0, 0], load_case, x=L - b, coordinate_definition="absolute"
     )
 
     solver = LinearStaticSolver(model)
@@ -810,11 +816,11 @@ def test_figure_11() -> None:
     a, b = a2, b2
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force(
-        [0, 0, -P1], load_case, x=a, coordinate_definition="absolute"
+    member.add_point_load(
+        [0, 0, -P1, 0, 0, 0], load_case, x=a, coordinate_definition="absolute"
     )
-    member.add_point_force(
-        [0, 0, -P2], load_case, x=L - b, coordinate_definition="absolute"
+    member.add_point_load(
+        [0, 0, -P2, 0, 0, 0], load_case, x=L - b, coordinate_definition="absolute"
     )
 
     solver = LinearStaticSolver(model)
@@ -900,9 +906,11 @@ def test_figure_11_combinations() -> None:
     a, b = a2, b2
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P1], lc1, x=a, coordinate_definition="absolute")
-    member.add_point_force(
-        [0, 0, -P2 / 2], lc2, x=L - b, coordinate_definition="absolute"
+    member.add_point_load(
+        [0, 0, -P1, 0, 0, 0], lc1, x=a, coordinate_definition="absolute"
+    )
+    member.add_point_load(
+        [0, 0, -P2 / 2, 0, 0, 0], lc2, x=L - b, coordinate_definition="absolute"
     )
 
     solver = LinearStaticSolver(model)
@@ -1067,7 +1075,9 @@ def test_figure_14() -> None:
     a, b = a1, b1
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P], load_case, x=a, coordinate_definition="absolute")
+    member.add_point_load(
+        [0, 0, -P, 0, 0, 0], load_case, x=a, coordinate_definition="absolute"
+    )
 
     solver = LinearStaticSolver(model)
     solver.solve()
@@ -1194,7 +1204,7 @@ def test_figure_16() -> None:
     solver = LinearStaticSolver(model)
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P], load_case, x=0.5)
+    member.add_point_load([0, 0, -P, 0, 0, 0], load_case, x=0.5)
 
     solver = LinearStaticSolver(model)
     solver.solve()
@@ -1271,7 +1281,9 @@ def test_figure_17() -> None:
     a, b = a1, b1
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P], load_case, x=a, coordinate_definition="absolute")
+    member.add_point_load(
+        [0, 0, -P, 0, 0, 0], load_case, x=a, coordinate_definition="absolute"
+    )
 
     solver = LinearStaticSolver(model)
     solver.solve()

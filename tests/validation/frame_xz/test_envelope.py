@@ -26,14 +26,18 @@ def test_simple_beam_3_point_loads() -> None:
     member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
 
     lc1 = model.add_load_case("LC1")
-    member.add_point_force([0, 0, -F], lc1, x=L / 4, coordinate_definition="absolute")
+    member.add_point_load(
+        [0, 0, -F, 0, 0, 0], lc1, x=L / 4, coordinate_definition="absolute"
+    )
 
     lc2 = model.add_load_case("LC2")
-    member.add_point_force([0, 0, +F], lc2, x=L / 2, coordinate_definition="absolute")
+    member.add_point_load(
+        [0, 0, +F, 0, 0, 0], lc2, x=L / 2, coordinate_definition="absolute"
+    )
 
     lc3 = model.add_load_case("LC3")
-    member.add_point_force(
-        [0, 0, -F], lc3, x=3 * L / 4, coordinate_definition="absolute"
+    member.add_point_load(
+        [0, 0, -F, 0, 0, 0], lc3, x=3 * L / 4, coordinate_definition="absolute"
     )
 
     envelope = model.add_envelope("ENV1", [lc1, lc2, lc3])

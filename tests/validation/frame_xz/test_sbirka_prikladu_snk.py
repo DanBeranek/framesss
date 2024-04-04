@@ -60,8 +60,8 @@ def test_example_5_2() -> None:
     lc = model.add_load_case("LC1")
 
     member_12.add_distributed_load([10, 0, 0, 10, 0, 0], lc)
-    member_34.add_point_force([0, 0, -15], lc, x=1.8 / 3)
-    member_65.add_point_force([0, 0, -20], lc, x=0.5)
+    member_34.add_point_load([0, 0, -15, 0, 0, 0], lc, x=1.8 / 3)
+    member_65.add_point_load([0, 0, -20, 0, 0, 0], lc, x=0.5)
 
     node_6.add_nodal_load([4, 0, 0, 0, 0, 0], lc)
 
@@ -183,11 +183,11 @@ def test_example_5_2_combinations() -> None:
 
     lc2 = model.add_load_case("LC2")
     f2 = -1
-    member_34.add_point_force(np.array([0, 0, -15]) / f2, lc2, x=1.8 / 3)
+    member_34.add_point_load(np.array([0, 0, -15, 0, 0, 0]) / f2, lc2, x=1.8 / 3)
 
     lc3 = model.add_load_case("LC3")
     f3 = 1
-    member_65.add_point_force(np.array([0, 0, -20]) / f3, lc3, x=0.5)
+    member_65.add_point_load(np.array([0, 0, -20, 0, 0, 0]) / f3, lc3, x=0.5)
 
     lc4 = model.add_load_case("LC4")
     f4 = 4
