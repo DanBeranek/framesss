@@ -260,7 +260,7 @@ class Member1D:
 
     def add_point_force(
         self,
-        load_components: list[float],
+        load_components: list[float] | npt.NDArray[np.float64],
         load_case: LoadCase,
         x: float,
         coordinate_system: str | LoadCoordinateSystem = LoadCoordinateSystem.GLOBAL,
@@ -305,7 +305,7 @@ class Member1D:
 
     def add_point_moment(
         self,
-        load_components: list[float],
+        load_components: list[float] | npt.NDArray[np.float64],
         load_case: LoadCase,
         x: float,
         coordinate_definition: (
@@ -341,7 +341,7 @@ class Member1D:
 
     def add_distributed_load(
         self,
-        load_components: list[float],
+        load_components: list[float] | npt.NDArray[np.float64],
         load_case: LoadCase,
         x_start: float = 0.0,
         x_end: float = 1.0,
@@ -394,7 +394,7 @@ class Member1D:
 
     def add_thermal_load(
         self,
-        temperature_gradients: list[float],
+        temperature_gradients: list[float] | npt.NDArray[np.float64],
         load_case: LoadCase,
         x_start: float = 0.0,
         x_end: float = 1.0,

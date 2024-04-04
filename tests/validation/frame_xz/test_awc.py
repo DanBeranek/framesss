@@ -893,7 +893,7 @@ def test_figure_11_combinations() -> None:
         lc2: 2.0,
     }
 
-    comb = model.add_load_combination("CO1", combination)
+    comb = model.add_load_case_combination("CO1", combination)
 
     solver = LinearStaticSolver(model)
 

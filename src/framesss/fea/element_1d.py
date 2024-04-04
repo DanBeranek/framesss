@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
     from framesss.fea.node import Node
     from framesss.pre.cases import LoadCase
-    from framesss.pre.cases import LoadCombination
+    from framesss.pre.cases import LoadCaseCombination
     from framesss.pre.member_1d import Member1D
 
 MAX_DISTANCE_BETWEEN_SAMPLING_POINTS = 0.25  # (m)
@@ -62,7 +62,7 @@ class Element1D:
                             respective internal force at the start of the element.
     :ivar end_torsional_moments, end_bending_moments_y, end_bending_moments_z: Dictionaries mapping each
                             LoadCase to the respective internal moment at the start of the element.
-    :ivar peak_points: Dictionary mapping each LoadCase and LoadCombination to the local x coordinate
+    :ivar peak_points: Dictionary mapping each LoadCase and LoadCaseCombination to the local x coordinate
                        of potential critical points along the element's length.
     """
 
@@ -133,27 +133,29 @@ class Element1D:
 
         # [a, b, c]
         self.axial_force_eqn_coefficients: dict[
-            LoadCase | LoadCombination, npt.NDArray[np.float64]
+            LoadCase | LoadCaseCombination, npt.NDArray[np.float64]
         ] = {}
         self.shear_force_y_eqn_coefficients: dict[
-            LoadCase | LoadCombination, npt.NDArray[np.float64]
+            LoadCase | LoadCaseCombination, npt.NDArray[np.float64]
         ] = {}
         self.shear_force_z_eqn_coefficients: dict[
-            LoadCase | LoadCombination, npt.NDArray[np.float64]
+            LoadCase | LoadCaseCombination, npt.NDArray[np.float64]
         ] = {}
         self.torsional_moment_eqn_coefficients: dict[
-            LoadCase | LoadCombination, npt.NDArray[np.float64]
+            LoadCase | LoadCaseCombination, npt.NDArray[np.float64]
         ] = {}
 
         # [a, b, c, d]
         self.bending_moment_y_eqn_coefficients: dict[
-            LoadCase | LoadCombination, npt.NDArray[np.float64]
+            LoadCase | LoadCaseCombination, npt.NDArray[np.float64]
         ] = {}
         self.bending_moment_z_eqn_coefficients: dict[
-            LoadCase | LoadCombination, npt.NDArray[np.float64]
+            LoadCase | LoadCaseCombination, npt.NDArray[np.float64]
         ] = {}
 
-        self.peak_points: dict[LoadCase | LoadCombination, npt.NDArray[np.float64]] = {}
+        self.peak_points: dict[
+            LoadCase | LoadCaseCombination, npt.NDArray[np.float64]
+        ] = {}
 
     def __repr__(self) -> str:
         """Return a string representation of the element."""
@@ -733,7 +735,7 @@ class Element1D:
         self.axial_force_eqn_coefficients[load_case] = np.array([-a, -b, c])
 
     def save_axial_equation_coefficients_for_load_combination(
-        self, load_combination: LoadCombination
+        self, load_combination: LoadCaseCombination
     ) -> None:
         """
         Calculate axial force coefficients for an element under given load combination.
@@ -741,7 +743,7 @@ class Element1D:
         For linear distributed load, the axial force equation
         is defined as: N(x) = (a / 2) * x^2 + b * x + c.
 
-        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+        :param load_combination: A reference to an instance of the :class:`LoadCaseCombination` class.
         :return: A tuple of three floats representing the coefficients of the axial force equation.
         """
         coefficients = np.zeros(3, dtype=np.float64)
@@ -752,12 +754,12 @@ class Element1D:
         self.axial_force_eqn_coefficients[load_combination] = coefficients
 
     def save_peak_points_for_axial_force_eqn(
-        self, case: LoadCase | LoadCombination
+        self, case: LoadCase | LoadCaseCombination
     ) -> None:
         """
         Calculate positions of local extreme axial forces for given load case or load combination.
 
-        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCombination` class.
+        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCaseCombination` class.
         :return: An array of points where local extremes can occur.
         """
         a, b, c = self.axial_force_eqn_coefficients[case]
@@ -775,7 +777,7 @@ class Element1D:
         self.peak_points[case] = peak_points
 
     def get_axial_force(
-        self, case: LoadCase | LoadCombination, x: npt.NDArray[np.float64] | float
+        self, case: LoadCase | LoadCaseCombination, x: npt.NDArray[np.float64] | float
     ) -> npt.NDArray[np.float64]:
         """
         Calculate axial forces along the element for given load case.
@@ -784,7 +786,7 @@ class Element1D:
         case. For truss structures, the axial force is considered constant. For other types of
         structures, the axial force is calculated using the coefficients from the axial force equation.
 
-        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCombination` class.
+        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCaseCombination` class.
         :param x: An array of positions along the element's x-axis where the internal axial forces are to be computed.
         :return: The calculated axial forces at the specified positions.
         """
@@ -828,7 +830,7 @@ class Element1D:
         self.shear_force_y_eqn_coefficients[load_case] = np.array([a, b, c])
 
     def save_shear_force_xy_equation_coefficients_for_load_combination(
-        self, load_combination: LoadCombination
+        self, load_combination: LoadCaseCombination
     ) -> None:
         """
         Calculate shear force coefficients in local xy plane for an element under given load case.
@@ -836,7 +838,7 @@ class Element1D:
         For linear distributed load, the shear force equation
         is defined as: V(x) = (a / 2) * x^2 + b * x + c.
 
-        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+        :param load_combination: A reference to an instance of the :class:`LoadCaseCombination` class.
         :return: A tuple of three floats representing the coefficients of the shear force equation.
         """
         coefficients = np.zeros(3, dtype=np.float64)
@@ -847,12 +849,12 @@ class Element1D:
         self.shear_force_y_eqn_coefficients[load_combination] = coefficients
 
     def save_peak_points_for_shear_force_xy_eqn(
-        self, case: LoadCase | LoadCombination
+        self, case: LoadCase | LoadCaseCombination
     ) -> None:
         """
         Calculate positions of local extreme shear forces for given load case or load combination.
 
-        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCombination` class.
+        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCaseCombination` class.
         :return: An array of points where local extremes can occur.
         """
         a, b, c = self.shear_force_y_eqn_coefficients[case]
@@ -870,12 +872,12 @@ class Element1D:
         self.peak_points[case] = peak_points
 
     def get_shear_force_xy(
-        self, case: LoadCase | LoadCombination, x: npt.NDArray[np.float64] | float
+        self, case: LoadCase | LoadCaseCombination, x: npt.NDArray[np.float64] | float
     ) -> npt.NDArray[np.float64]:
         """
         Calculate shear forces in local xy plane along the element for given load case.
 
-        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCombination` class.
+        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCaseCombination` class.
         :param x: An array of positions along the element's x-axis where the internal axial forces are to be computed.
         :return: The calculated shear forces in local xy plane at the specified positions.
         """
@@ -919,7 +921,7 @@ class Element1D:
         self.shear_force_z_eqn_coefficients[load_case] = np.array([a, b, c])
 
     def save_shear_force_xz_equation_coefficients_for_load_combination(
-        self, load_combination: LoadCombination
+        self, load_combination: LoadCaseCombination
     ) -> None:
         """
         Calculate shear force coefficients in local xz plane for an element under given load combination.
@@ -927,7 +929,7 @@ class Element1D:
         For linear distributed load, the shear force equation
         is defined as: V(x) = (a / 2) * x^2 + b * x + c.
 
-        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+        :param load_combination: A reference to an instance of the :class:`LoadCaseCombination` class.
         :return: A tuple of three floats representing the coefficients of the shear force equation.
         """
         coefficients = np.zeros(3, dtype=np.float64)
@@ -938,12 +940,12 @@ class Element1D:
         self.shear_force_z_eqn_coefficients[load_combination] = coefficients
 
     def save_peak_points_for_shear_force_xz_eqn(
-        self, case: LoadCase | LoadCombination
+        self, case: LoadCase | LoadCaseCombination
     ) -> None:
         """
         Calculate positions of local extreme shear forces for given load case or load combination.
 
-        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCombination` class.
+        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCaseCombination` class.
         :return: An array of points where local extremes can occur.
         """
         a, b, c = self.shear_force_z_eqn_coefficients[case]
@@ -961,12 +963,12 @@ class Element1D:
         self.peak_points[case] = peak_points
 
     def get_shear_force_xz(
-        self, case: LoadCase | LoadCombination, x: npt.NDArray[np.float64] | float
+        self, case: LoadCase | LoadCaseCombination, x: npt.NDArray[np.float64] | float
     ) -> npt.NDArray[np.float64]:
         """
         Calculate shear forces in local xz plane along the element for given load case.
 
-        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCombination` class.
+        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCaseCombination` class.
         :param x: An array of positions along the element's x-axis where the internal shear forces are to be computed.
         :return: The calculated shear forces in local xz plane at the specified positions.
         """
@@ -1013,7 +1015,7 @@ class Element1D:
         self.bending_moment_z_eqn_coefficients[load_case] = np.array([a, b, c, d])
 
     def save_bending_moment_xy_equation_coefficients_for_load_combination(
-        self, load_combination: LoadCombination
+        self, load_combination: LoadCaseCombination
     ) -> None:
         """
         Calculate bending moment coefficients about local z-axis for an element under given load combination.
@@ -1021,7 +1023,7 @@ class Element1D:
         For linear distributed load, the bending moment equation
         is defined as: M(x) = (a / 6) * x^3 + (b / 2)* x^2 + c * x + d.
 
-        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+        :param load_combination: A reference to an instance of the :class:`LoadCaseCombination` class.
         :return: A tuple of four floats representing the coefficients of the bending moment equation.
         """
         coefficients = np.zeros(4, dtype=np.float64)
@@ -1032,12 +1034,12 @@ class Element1D:
         self.bending_moment_z_eqn_coefficients[load_combination] = coefficients
 
     def save_peak_points_for_bending_moment_xy_eqn(
-        self, case: LoadCase | LoadCombination
+        self, case: LoadCase | LoadCaseCombination
     ) -> None:
         """
         Calculate local extreme bending moments about z-axis for given load case.
 
-        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCombination` class.
+        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCaseCombination` class.
         :return: An array where each row contains a pair [position, bending moment] for each critical point.
         """
         a, b, c, d = self.bending_moment_z_eqn_coefficients[case]
@@ -1055,12 +1057,12 @@ class Element1D:
         self.peak_points[case] = peak_points
 
     def get_bending_moment_xy(
-        self, case: LoadCase | LoadCombination, x: npt.NDArray[np.float64] | float
+        self, case: LoadCase | LoadCaseCombination, x: npt.NDArray[np.float64] | float
     ) -> npt.NDArray[np.float64]:
         """
         Calculate bending moment about local z-axis along the element for given load case.
 
-        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCombination` class.
+        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCaseCombination` class.
         :param x: An array of positions along the element's x-axis where the internal bending
                   moments are to be computed.
         :return: The calculated bending moments about local z-axis at the specified positions.
@@ -1108,7 +1110,7 @@ class Element1D:
         self.bending_moment_y_eqn_coefficients[load_case] = np.array([a, b, c, d])
 
     def save_bending_moment_xz_equation_coefficients_for_load_combination(
-        self, load_combination: LoadCombination
+        self, load_combination: LoadCaseCombination
     ) -> None:
         """
         Calculate bending moment coefficients about local y-axis for an element under given load combination.
@@ -1116,7 +1118,7 @@ class Element1D:
         For linear distributed load, the bending moment equation
         is defined as: M(x) = (a / 6) * x^3 + (b / 2)* x^2 + c * x + d.
 
-        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+        :param load_combination: A reference to an instance of the :class:`LoadCaseCombination` class.
         :return: A tuple of four floats representing the coefficients of the bending moment equation.
         """
         coefficients = np.zeros(4, dtype=np.float64)
@@ -1127,12 +1129,12 @@ class Element1D:
         self.bending_moment_y_eqn_coefficients[load_combination] = coefficients
 
     def save_peak_points_for_bending_moment_xz_eqn(
-        self, case: LoadCase | LoadCombination
+        self, case: LoadCase | LoadCaseCombination
     ) -> None:
         """
         Calculate local extreme bending moments about y-axis for given load case.
 
-        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCombination` class.
+        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCaseCombination` class.
         :return: An array where each row contains a pair [position, bending moment] for each critical point.
         """
         a, b, c, d = self.bending_moment_y_eqn_coefficients[case]
@@ -1150,12 +1152,12 @@ class Element1D:
         self.peak_points[case] = peak_points
 
     def get_bending_moment_xz(
-        self, case: LoadCase | LoadCombination, x: npt.NDArray[np.float64] | float
+        self, case: LoadCase | LoadCaseCombination, x: npt.NDArray[np.float64] | float
     ) -> npt.NDArray[np.float64]:
         """
         Calculate bending moment about local y-axis along the element for given load case.
 
-        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCombination` class.
+        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCaseCombination` class.
         :param x: An array of positions along the element's x-axis where the internal bending moments
                   are to be computed.
         :return: The calculated bending moments about local y-axis at the specified positions.

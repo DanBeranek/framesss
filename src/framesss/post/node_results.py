@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 
     from framesss.fea.node import Node
     from framesss.pre.cases import LoadCase
-    from framesss.pre.cases import LoadCombination
+    from framesss.pre.cases import LoadCaseCombination
 
-    LoadType: TypeAlias = Union[LoadCase, LoadCombination]
+    LoadType: TypeAlias = Union[LoadCase, LoadCaseCombination]
     ResultDict: TypeAlias = dict[LoadType, float]
 
 FIXITIES_WITH_REACTION = [SupportFixity.FIXED_DOF, SupportFixity.SPRING_DOF]

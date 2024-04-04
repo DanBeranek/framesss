@@ -99,9 +99,11 @@ class LinearStaticSolver(Solver):
 
         :param verbose: If True, detailed progress of each analysis step is printed to the console.
         """
+        steps_init = 6
         steps_cases = len(self.model.load_cases) * 7
-        steps_combs = len(self.model.load_combinations) * 4
-        n_steps = 7 + steps_cases + steps_combs
+        steps_combs = len(self.model.load_combinations) * 3
+        steps_envelopes = len(self.model.envelopes) * 1
+        n_steps = steps_init + steps_cases + steps_combs + steps_envelopes
 
         if verbose:
             print(f"1/{n_steps} : Preparing fea data...")
@@ -114,7 +116,8 @@ class LinearStaticSolver(Solver):
 
         if verbose:
             print(
-                f"3/{n_steps} : Initialization of global stiffness matrix and force vectors..."
+                f"3/{n_steps}"
+                f" : Initialization of global stiffness matrix and force vectors..."
             )
         self.init_global_matrices_vectors()
 
@@ -135,45 +138,52 @@ class LinearStaticSolver(Solver):
         for i, load_case in enumerate(self.model.load_cases):
             if verbose:
                 print(
-                    f"{i*7 + 7}/{n_steps} : Applying prescribed displacements for load case: '{load_case.label}..."
+                    f"{i*7 + steps_init + 1}/{n_steps}"
+                    f" : Applying prescribed displacements for load case: '{load_case.label}..."
                 )
             self.model.analysis.apply_prescribed_displacements(self.model, load_case)
 
             if verbose:
                 print(
-                    f"{i*7 + 8}/{n_steps} : Applying nodal forces for load case: '{load_case.label}'..."
+                    f"{i*7 + steps_init + 2}/{n_steps}"
+                    f" : Applying nodal forces for load case: '{load_case.label}'..."
                 )
             self.model.analysis.assemble_nodal_loads(self.model, load_case)
 
             if verbose:
                 print(
-                    f"{i*7 + 9}/{n_steps} : Applying member forces for load case: '{load_case.label}'..."
+                    f"{i*7 + steps_init + 3}/{n_steps}"
+                    f" : Applying member forces for load case: '{load_case.label}'..."
                 )
             load_case.assemble_equivalent_nodal_loads()
 
             if verbose:
                 print(
-                    f"{i*7 + 10}/{n_steps} : Solving load case: '{load_case.label}'..."
+                    f"{i*7 + steps_init + 3}/{n_steps}"
+                    f" : Solving load case: '{load_case.label}'..."
                 )
             self.solve_load_case(load_case)
 
             if verbose:
                 print(
-                    f"{i*7 + 11}/{n_steps} : Computing reactions for load case: '{load_case.label}'..."
+                    f"{i*7 + steps_init + 4}/{n_steps}"
+                    f" : Computing reactions for load case: '{load_case.label}'..."
                 )
             self.save_displacements(load_case)
             self.save_reactions(load_case)
 
             if verbose:
                 print(
-                    f"{i*7 + 12}/{n_steps} : Computing internal forces for load case: '{load_case.label}'..."
+                    f"{i*7 + steps_init + 5}/{n_steps}"
+                    f" : Computing internal forces for load case: '{load_case.label}'..."
                 )
             self.save_element_internal_forces(load_case)
             self.save_member_internal_forces(load_case)
 
             if verbose:
                 print(
-                    f"{i*7 + 13}/{n_steps} : Computing internal displacements for load case: '{load_case.label}'..."
+                    f"{i*7 + steps_init + 6}/{n_steps}"
+                    f" : Computing internal displacements for load case: '{load_case.label}'..."
                 )
             self.save_member_internal_displacements(load_case)
 
@@ -182,7 +192,8 @@ class LinearStaticSolver(Solver):
         for i, load_combination in enumerate(self.model.load_combinations):
             if verbose:
                 print(
-                    f"{i*7 + steps_cases + 1}/{n_steps} : Computing internal forces for load combination: "
+                    f"{i*3 + steps_init + steps_cases + 1}/{n_steps}"
+                    f" : Computing internal forces for load combination: "
                     f"'{load_combination.label}'..."
                 )
             self.save_displacements_combination(load_combination)
@@ -190,17 +201,27 @@ class LinearStaticSolver(Solver):
 
             if verbose:
                 print(
-                    f"{i*7 + steps_cases + 2}/{n_steps} : Computing internal forces for load combination: "
+                    f"{i*3 + steps_init + steps_cases + 2}/{n_steps}"
+                    f" : Computing internal forces for load combination: "
                     f"'{load_combination.label}'..."
                 )
             self.save_member_internal_forces(load_combination)
 
             if verbose:
                 print(
-                    f"{i*7 + steps_cases + 3}/{n_steps} : Computing internal displacements for load combination: "
+                    f"{i*3 + steps_init + steps_cases + 3}/{n_steps}"
+                    f" : Computing internal displacements for load combination: "
                     f"'{load_combination.label}'..."
                 )
             self.save_member_internal_displacements_combination(load_combination)
+
+        for i, envelope in enumerate(self.model.envelopes):
+            if verbose:
+                print(
+                    f"{i*1 + steps_init + steps_cases + steps_combs + 1}/{n_steps}"
+                    f" : Computing internal forces for envelope: {envelope.label}..."
+                )
+            self.save_envelope_internal_forces(envelope)
 
         if verbose:
             print(f"{n_steps}/{n_steps} : Analysis successfully finished.")

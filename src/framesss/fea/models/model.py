@@ -8,8 +8,9 @@ from framesss.enums import BeamConnection
 from framesss.enums import Element1DType
 from framesss.enums import SupportFixity
 from framesss.fea.node import Node
+from framesss.pre.cases import EnvelopeCombination
 from framesss.pre.cases import LoadCase
-from framesss.pre.cases import LoadCombination
+from framesss.pre.cases import LoadCaseCombination
 from framesss.pre.member_1d import Member1D
 
 if TYPE_CHECKING:
@@ -39,7 +40,7 @@ class Model:
                    members (e.g., beams, columns) in the model.
     :ivar load_cases: A set of :class:`LoadCase` instances, each defining a unique set
                       of loading conditions to be analyzed.
-    :ivar load_combinations: A set of :class:`LoadCombination` instances, defining
+    :ivar load_combinations: A set of :class:`LoadCaseCombination` instances, defining
                              load_cases of load cases for analysis.
     :ivar elements: A set of :class:`Element1D` instances.
     :ivar neq_free: Number of equations corresponding to free DoFs.
@@ -61,7 +62,8 @@ class Model:
         self.nodes: set[Node] = set()
         self.members: set[Member1D] = set()
         self.load_cases: set[LoadCase] = set()
-        self.load_combinations: set[LoadCombination] = set()
+        self.load_combinations: set[LoadCaseCombination] = set()
+        self.envelopes: set[EnvelopeCombination] = set()
         self.elements: set[Element1D] = set()
 
         self.neq_free: int = 0
@@ -171,19 +173,32 @@ class Model:
         self.load_cases.add(new_case)
         return new_case
 
-    def add_load_combination(
+    def add_load_case_combination(
         self, label: str, combination: dict[LoadCase, float]
-    ) -> LoadCombination:
+    ) -> LoadCaseCombination:
         """
-        Add and return new :class:`LoadCombination` instance.
+        Add and return new :class:`LoadCaseCombination` instance.
 
         :param label: Unique user-defined label of the load combination.
         :param combination: Dictionary mapping :class:`LoadCase` instances
                             to their scaling factors.
         """
-        new_combination = LoadCombination(label, combination)
+        new_combination = LoadCaseCombination(label, combination)
         self.load_combinations.add(new_combination)
         return new_combination
+
+    def add_envelope(
+        self, label: str, cases: list[LoadCase | LoadCaseCombination]
+    ) -> EnvelopeCombination:
+        """
+        Add and return new :class:`EnvelopeCombination` instance.
+
+        :param label: Unique user-defined label of the load combination.
+        :param cases:  A list of :class:`LoadCase` and :class:`LoadCombination`.
+        """
+        new_envelope = EnvelopeCombination(label, cases)
+        self.envelopes.add(new_envelope)
+        return new_envelope
 
     def discretize_members(self) -> None:
         """

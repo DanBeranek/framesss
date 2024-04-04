@@ -86,7 +86,7 @@ class LoadCase:
             self.f_global[dofs] += feg
 
 
-class LoadCombination:
+class LoadCaseCombination:
     """
     Represent a combination of load cases.
 
@@ -96,12 +96,12 @@ class LoadCombination:
     """
 
     def __init__(self, label: str, load_cases: dict[LoadCase, float]) -> None:
-        """Init the LoadCombination class."""
+        """Init the LoadCaseCombination class."""
         self.label = label
         self.load_cases = load_cases
 
     def __repr__(self) -> str:
-        """Return a string representation of LoadCombination object."""
+        """Return a string representation of LoadCaseCombination object."""
         return f"{self.__class__.__name__}({self.label})"
 
     def add_load_case(self, load_case: LoadCase, factor: float) -> None:
@@ -112,3 +112,31 @@ class LoadCombination:
         :param factor: The factor for a given load case.
         """
         self.load_cases[load_case] = factor
+
+
+class EnvelopeCombination:
+    """
+    Represent an envelope of load cases and (or) load combinations.
+
+    This class is designed to create an envelope of internal forces.
+
+    :param label: A unique identifier for the envelope combination.
+    :ivar cases: A list of :class:`LoadCase` and :class:`LoadCombination`.
+    """
+
+    def __init__(self, label: str, cases: list[LoadCase | LoadCaseCombination]) -> None:
+        """Init the LoadCaseCombination class."""
+        self.label = label
+        self.cases = cases
+
+    def __repr__(self) -> str:
+        """Return a string representation of EnvelopeCombination object."""
+        return f"{self.__class__.__name__}({self.label})"
+
+    def add_case(self, case: LoadCase | LoadCaseCombination) -> None:
+        """
+        Add load case or load combination to load combination.
+
+        :param case: A reference to an instance of the :class:`LoadCase` and :class:`LoadCombination`.
+        """
+        self.cases.append(case)

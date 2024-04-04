@@ -45,7 +45,7 @@ class PointForceOnMember:
     def __init__(
         self,
         member: Member1D,
-        load_components: list[float],
+        load_components: list[float] | npt.NDArray[np.float64],
         x: float,
         load_case: LoadCase,
         coordinate_system: str | LoadCoordinateSystem,
@@ -161,7 +161,7 @@ class PointMomentOnMember:
     def __init__(
         self,
         member: Member1D,
-        load_components: list[float],
+        load_components: list[float] | npt.NDArray[np.float64],
         x: float,
         load_case: LoadCase,
         coordinate_definition: str | CoordinateDefinition,
@@ -234,7 +234,7 @@ class DistributedLoadOnMember:
     def __init__(
         self,
         member: Member1D,
-        load_components: list[float],
+        load_components: list[float] | npt.NDArray[np.float64],
         x_start: float,
         x_end: float,
         load_case: LoadCase,
@@ -426,7 +426,7 @@ class ThermalLoadOnMember:
     def __init__(
         self,
         member: Member1D,
-        temperature_gradients: list[float],
+        temperature_gradients: list[float] | npt.NDArray[np.float64],
         x_start: float,
         x_end: float,
         load_case: LoadCase,
