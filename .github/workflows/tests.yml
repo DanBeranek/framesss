@@ -50,6 +50,11 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
+      - name: Debug
+        run: |
+          ls -la ${GITHUB_WORKSPACE}/
+          pip install -c ${GITHUB_WORKSPACE}/constraints.txt pip
+
       - name: Upgrade pip
         run: |
           pip install -c ${GITHUB_WORKSPACE}/constraints.txt pip
