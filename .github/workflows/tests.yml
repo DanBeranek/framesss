@@ -52,7 +52,7 @@ jobs:
 
       - name: Upgrade pip
         run: |
-          pip install -c .github/workflows/constraints.txt pip
+          pip install -c ${GITHUB_WORKSPACE}/constraints.txt pip
           pip --version
 
       - name: Upgrade pip in virtual environments
@@ -64,20 +64,15 @@ jobs:
           with open(os.environ["GITHUB_ENV"], mode="a") as io:
               print(f"VIRTUALENV_PIP={pip.__version__}", file=io)
 
-      - name: Debug - List .github/workflows directory
-        run: |
-          pwd
-          ls -la .github/workflows/
-
       - name: Install Poetry
         run: |
-          pipx install --pip-args "-c .github/workflows/constraints.txt" poetry
+          pipx install --pip-args "-c ${GITHUB_WORKSPACE}/constraints.txt" poetry
           poetry --version
 
       - name: Install Nox
         run: |
-          pipx install --pip-args "-c .github/workflows/constraints.txt" nox
-          pipx inject --pip-args "-c .github/workflows/constraints.txt" nox nox-poetry
+          pipx install --pip-args "-c ${GITHUB_WORKSPACE}/constraints.txt" nox
+          pipx inject --pip-args "-c ${GITHUB_WORKSPACE}/constraints.txt" nox nox-poetry
           nox --version
 
       - name: Compute pre-commit cache key
@@ -139,18 +134,18 @@ jobs:
 
       - name: Upgrade pip
         run: |
-          pip install -c .github/workflows/constraints.txt pip
+          pip install -c ${GITHUB_WORKSPACE}/constraints.txt pip
           pip --version
 
       - name: Install Poetry
         run: |
-          pipx install --pip-args "-c .github/workflows/constraints.txt" poetry
+          pipx install --pip-args "-c ${GITHUB_WORKSPACE}/constraints.txt" poetry
           poetry --version
 
       - name: Install Nox
         run: |
-          pipx install --pip-args "-c .github/workflows/constraints.txt" nox
-          pipx inject --pip-args "-c .github/workflows/constraints.txt" nox nox-poetry
+          pipx install --pip-args "-c ${GITHUB_WORKSPACE}/constraints.txt" nox
+          pipx inject --pip-args "-c ${GITHUB_WORKSPACE}/constraints.txt" nox nox-poetry
           nox --version
 
       - name: Download coverage data
