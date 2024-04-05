@@ -14,7 +14,7 @@ Iz = H * B**3 / 12
 Ix = Iy + Iz
 
 
-def test_rectangular_section():
+def test_rectangular_section() -> None:
     section = RectangularSection("FOO", B, H, DUMMY_MAT)
 
     assert_almost_equal(section.area_x, A)

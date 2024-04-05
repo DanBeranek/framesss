@@ -122,7 +122,7 @@ class PolygonalSection(Section):
         """Calculate the area of cross-section."""
         y = self.y
         z = self.z
-        s = 0
+        s = 0.0
         for i in range(self.n_points):
             s += y[i] * z[i + 1] - y[i + 1] * z[i]
         return s / 2
@@ -132,7 +132,7 @@ class PolygonalSection(Section):
         y = self.y
         z = self.z
         a = self.area()
-        sy = sz = 0
+        sy = sz = 0.0
         for i in range(self.n_points):
             sy += (y[i] + y[i + 1]) * (y[i] * z[i + 1] - y[i + 1] * z[i])
             sz += (z[i] + z[i + 1]) * (y[i] * z[i + 1] - y[i + 1] * z[i])
@@ -144,7 +144,7 @@ class PolygonalSection(Section):
         z = self.z
         a = self.area()
         cy, cz = self.centroid()
-        syy = szz = syz = 0
+        syy = szz = syz = 0.0
         for i in range(self.n_points):
             syy += (z[i] ** 2 + z[i] * z[i + 1] + z[i + 1] ** 2) * (
                 y[i] * z[i + 1] - y[i + 1] * z[i]
