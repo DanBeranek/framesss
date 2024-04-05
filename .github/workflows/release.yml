@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - master
-
+      
 jobs:
   release:
     name: Release
@@ -27,12 +27,12 @@ jobs:
 
       - name: Upgrade pip
         run: |
-          pip install -c ${{ GITHUB_WORKSPACE }}/.github/workflows/constraints.txt pip
+          pip install -c ${{ github.workspace }}/.github/workflows/constraints.txt pip
           pip --version
 
       - name: Install Poetry
         run: |
-          pip install -c ${{ GITHUB_WORKSPACE }}/.github/workflows/constraints.txt poetry
+          pip install -c ${{ github.workspace }}/.github/workflows/constraints.txt poetry
           poetry --version
 
       - name: Check if there is a parent commit
@@ -64,7 +64,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@v1.8.14
 
       - name: Publish package on TestPyPI
-        if: (!steps.check-version.outputs.tag)
+        if: (! steps.check-version.outputs.tag)
         uses: pypa/gh-action-pypi-publish@v1.8.14
         with:
           repository-url: https://test.pypi.org/legacy/
