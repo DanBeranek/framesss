@@ -8,6 +8,8 @@ import scipy as sp  # type: ignore[import-untyped]
 from framesss.enums import AnalysisModelType
 from framesss.enums import DoF
 from framesss.fea.analysis.analysis import Analysis
+from framesss.pre.cases import EnvelopeCombination
+from framesss.pre.cases import LoadCase
 from framesss.utils import assemble_subarray_at_indices
 
 if TYPE_CHECKING:
@@ -17,8 +19,7 @@ if TYPE_CHECKING:
     from framesss.fea.element_1d import Element1D
     from framesss.fea.models.model import Model
     from framesss.fea.node import Node
-    from framesss.pre.cases import LoadCase
-    from framesss.pre.cases import LoadCombination
+    from framesss.pre.cases import LoadCaseCombination
     from framesss.pre.member_1d import Member1D
 
 
@@ -183,11 +184,11 @@ class FrameXZAnalysis(Analysis):
         :param load_case: A reference to an instance of the :class:`LoadCase` class.
         :param fel: The internal force vector in local system for the element.
         """
-        element.axial_force[load_case] = fel[[0, 3]]
+        element.end_axial_forces[load_case] = fel[[0, 3]]
 
-        element.bending_moment_y[load_case] = fel[[1, 4]]
+        element.end_bending_moments_y[load_case] = fel[[1, 4]]
 
-        element.shear_force_z[load_case] = fel[[2, 5]]
+        element.end_shear_forces_z[load_case] = fel[[2, 5]]
 
     def get_displacement_shape_function_matrix(
         self, element: Element1D
@@ -280,8 +281,8 @@ class FrameXZAnalysis(Analysis):
 
         return displacements
 
-    def save_internal_stresses_on_member(
-        self, member: Member1D, load_case: LoadCase
+    def save_internal_stresses(
+        self, member: Member1D, case: LoadCase | LoadCaseCombination
     ) -> None:
         """
         Compute and save internal stresses.
@@ -294,108 +295,148 @@ class FrameXZAnalysis(Analysis):
         including axial forces, shear forces in the Z direction, and bending moments about the Y axis.
 
         :param member: A reference to an instance of the :class:`Member1D` class.
-        :param load_case: A reference to an instance of the :class:`LoadCase` class.
+        :param case: A reference to an instance of the :class:`LoadCase` or :class:`LoadCaseCombination` class.
         """
+        # Save equation coefficients
+
+        if isinstance(case, LoadCase):
+            for element in member.generated_elements:
+                element.save_axial_equation_coefficients_for_load_case(case)
+                element.save_shear_force_xz_equation_coefficients_for_load_case(case)
+                element.save_bending_moment_xz_equation_coefficients_for_load_case(case)
+        else:
+            for element in member.generated_elements:
+                element.save_axial_equation_coefficients_for_load_combination(case)
+                element.save_shear_force_xz_equation_coefficients_for_load_combination(
+                    case
+                )
+                element.save_bending_moment_xz_equation_coefficients_for_load_combination(
+                    case
+                )
+
+        for element in member.generated_elements:
+            element.save_peak_points_for_axial_force_eqn(case)
+            element.save_peak_points_for_shear_force_xz_eqn(case)
+            element.save_peak_points_for_bending_moment_xz_eqn(case)
+
         # Initialize empty arrays
         axial_forces = np.array([])
         shear_forces_z = np.array([])
         bending_moments_y = np.array([])
 
-        extreme_axial_forces = np.empty((0, 2))
-        extreme_shear_forces_z = np.empty((0, 2))
-        extreme_bending_moments_y = np.empty((0, 2))
+        peak_x_local = np.array([])
+        peak_axial_forces = np.array([])
+        peak_shear_forces_z = np.array([])
+        peak_bending_moments_y = np.array([])
 
         # Loop through every element
         for element in member.generated_elements:
             x = element.sampling_points
+            x_peaks = element.peak_points[case]
+
+            peak_x_local = np.append(peak_x_local, x_peaks + element.x_start)
 
             # Get axial forces
-            axial_forces = np.append(
-                axial_forces, element.get_internal_axial_forces(load_case, x)
-            )
-            extreme_axial_forces = np.append(
-                extreme_axial_forces,
-                element.get_max_internal_axial_forces(load_case),
-                axis=0,
+            axial_forces = np.append(axial_forces, element.get_axial_force(case, x))
+            peak_axial_forces = np.append(
+                peak_axial_forces, element.get_axial_force(case, x_peaks)
             )
 
             # Get shear forces
             shear_forces_z = np.append(
-                shear_forces_z, element.get_internal_shear_forces_xz(load_case, x)
+                shear_forces_z, element.get_shear_force_xz(case, x)
             )
-            extreme_shear_forces_z = np.append(
-                extreme_shear_forces_z,
-                element.get_max_internal_shear_forces_xz(load_case),
-                axis=0,
+            peak_shear_forces_z = np.append(
+                peak_shear_forces_z, element.get_shear_force_xz(case, x_peaks)
             )
 
             # Get bending moments
             bending_moments_y = np.append(
-                bending_moments_y, element.get_internal_bending_moments_xz(load_case, x)
+                bending_moments_y, element.get_bending_moment_xz(case, x)
             )
-            extreme_bending_moments_y = np.append(
-                extreme_bending_moments_y,
-                element.get_max_internal_bending_moments_xz(load_case),
-                axis=0,
+            peak_bending_moments_y = np.append(
+                peak_bending_moments_y, element.get_bending_moment_xz(case, x_peaks)
             )
 
         # Save results
-        member.results.axial_forces[load_case] = axial_forces
-        member.results.extreme_axial_forces[load_case] = extreme_axial_forces
-        min_max_axial_forces = np.array(
-            [np.min(extreme_axial_forces[:, 1]), np.max(extreme_axial_forces[:, 1])]
-        )
-        member.results.min_max_axial_forces[load_case] = min_max_axial_forces
-
-        member.results.shear_forces_z[load_case] = shear_forces_z
-        member.results.extreme_shear_forces_z[load_case] = extreme_shear_forces_z
-        min_max_shear_forces_z = np.array(
-            [np.min(extreme_shear_forces_z[:, 1]), np.max(extreme_shear_forces_z[:, 1])]
-        )
-        member.results.min_max_shear_forces_z[load_case] = min_max_shear_forces_z
-
-        member.results.bending_moments_y[load_case] = bending_moments_y
-        member.results.extreme_bending_moments_y[load_case] = extreme_bending_moments_y
-        min_max_bending_moments_y = np.array(
+        # Stack arrays and get only unique records for peak values
+        data = np.vstack(
             [
-                np.min(extreme_bending_moments_y[:, 1]),
-                np.max(extreme_bending_moments_y[:, 1]),
+                peak_x_local,
+                peak_axial_forces,
+                peak_shear_forces_z,
+                peak_bending_moments_y,
             ]
         )
-        member.results.min_max_bending_moments_y[load_case] = min_max_bending_moments_y
-
-    def save_internal_stresses_on_member_combination(
-        self, member: Member1D, load_combination: LoadCombination
-    ) -> None:
-        """
-        Compute and save internal stresses.
-
-        Computes and saves the internal stresses (axial forces, shear forces, and bending moments)
-        for a member under a specified load case. This includes both detailed distributions
-        along the member and extreme values for each stress component.
-
-        This method aggregates internal stress data from each :class:`Element1D` of the :class:`Member1D`,
-        including axial forces, shear forces in the Z direction, and bending moments about the Y axis.
-
-        :param member: A reference to an instance of the :class:`Member1D` class.
-        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
-        """
-        member.results.axial_forces[load_combination] = np.zeros(member.x_local.shape)
-        member.results.shear_forces_z[load_combination] = np.zeros(member.x_local.shape)
-        member.results.bending_moments_y[load_combination] = np.zeros(
-            member.x_local.shape
+        peak_x_local, peak_axial_forces, peak_shear_forces_z, peak_bending_moments_y = (
+            np.unique(data, axis=1)
         )
 
-        for load_case, factor in load_combination.combinations.items():
-            member.results.axial_forces[load_combination] += (
-                factor * member.results.axial_forces[load_case]
-            )
-            member.results.shear_forces_z[load_combination] += (
-                factor * member.results.shear_forces_z[load_case]
-            )
-            member.results.bending_moments_y[load_combination] += (
-                factor * member.results.bending_moments_y[load_case]
-            )
+        member.results.peak_x_local[case] = peak_x_local
+
+        member.results.axial_forces[case] = axial_forces
+        member.results.peak_axial_forces[case] = peak_axial_forces
+        min_max_axial_forces = np.array(
+            [np.min(peak_axial_forces), np.max(peak_axial_forces)]
+        )
+        member.results.min_max_axial_forces[case] = min_max_axial_forces
+
+        member.results.shear_forces_z[case] = shear_forces_z
+        member.results.peak_shear_forces_z[case] = peak_shear_forces_z
+        min_max_shear_forces_z = np.array(
+            [np.min(peak_shear_forces_z), np.max(peak_shear_forces_z)]
+        )
+        member.results.min_max_shear_forces_z[case] = min_max_shear_forces_z
+
+        member.results.bending_moments_y[case] = bending_moments_y
+        member.results.peak_bending_moments_y[case] = peak_bending_moments_y
+        min_max_bending_moments_y = np.array(
+            [
+                np.min(peak_bending_moments_y),
+                np.max(peak_bending_moments_y),
+            ]
+        )
+        member.results.min_max_bending_moments_y[case] = min_max_bending_moments_y
+
+    def save_envelope_stresses(
+        self, member: Member1D, envelope: EnvelopeCombination
+    ) -> None:
+        """
+        Filter and save the envelope of internal stresses.
+
+        :param member: A reference to an instance of the :class:`Member1D` class.
+        :param envelope: A reference to an instance of the :class:`EnvelopeCombination`.
+        """
+        axial_forces = np.vstack(
+            [member.results.axial_forces[case] for case in envelope.cases]
+        )
+        shear_forces_z = np.vstack(
+            [member.results.shear_forces_z[case] for case in envelope.cases]
+        )
+        bending_moments_y = np.vstack(
+            [member.results.bending_moments_y[case] for case in envelope.cases]
+        )
+
+        member.results.axial_forces[envelope] = np.array(
+            [
+                np.min(axial_forces, axis=0),
+                np.max(axial_forces, axis=0),
+            ]
+        )
+
+        member.results.shear_forces_z[envelope] = np.array(
+            [
+                np.min(shear_forces_z, axis=0),
+                np.max(shear_forces_z, axis=0),
+            ]
+        )
+
+        member.results.bending_moments_y[envelope] = np.array(
+            [
+                np.min(bending_moments_y, axis=0),
+                np.max(bending_moments_y, axis=0),
+            ]
+        )
 
     def save_internal_displacements_on_member(
         self, member: Member1D, load_case: LoadCase
@@ -429,7 +470,7 @@ class FrameXZAnalysis(Analysis):
         member.results.translations_z[load_case] = translations_z
 
     def save_internal_displacements_on_member_combination(
-        self, member: Member1D, load_combination: LoadCombination
+        self, member: Member1D, load_combination: LoadCaseCombination
     ) -> None:
         """
         Compute and save the internal displacements for a member under a specified load case.
@@ -437,12 +478,12 @@ class FrameXZAnalysis(Analysis):
         This method aggregates displacement data from each :class:`Element1D` of the :class:`Member1D`,
 
         :param member: A reference to an instance of the :class:`Member1D` class.
-        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+        :param load_combination: A reference to an instance of the :class:`LoadCaseCombination` class.
         """
         member.results.translations_x[load_combination] = np.zeros(member.x_local.shape)
         member.results.translations_z[load_combination] = np.zeros(member.x_local.shape)
 
-        for load_case, factor in load_combination.combinations.items():
+        for load_case, factor in load_combination.load_cases.items():
             member.results.translations_x[load_combination] += (
                 factor * member.results.translations_x[load_case]
             )
@@ -475,7 +516,7 @@ class FrameXZAnalysis(Analysis):
             rfz[load_case] = load_case.f_global[node.global_dofs[2]]
 
     def save_reactions_combination(
-        self, node: Node, load_combination: LoadCombination
+        self, node: Node, load_combination: LoadCaseCombination
     ) -> None:
         """
         Save the reaction forces and moments for a specified node under a given load combination.
@@ -484,43 +525,34 @@ class FrameXZAnalysis(Analysis):
         :class:`LoadCase` and assigns them to the corresponding node results.
 
         :param node: A reference to an instance of the :class:`Node` class.
-        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+        :param load_combination: A reference to an instance of the :class:`LoadCaseCombination` class.
 
         Note that the method operates directly on the `node.results` attribute, updating it with
         the calculated reactions for the specified load case. If `node.fixity` for a particular
         direction is not `SupportFixity.FIXED_DOF` (i.e. reaction storage for a particular direction
         is None), this method will not attempt to save reactions in that direction.
         """
-        for load_case, factor in load_combination.combinations.items():
-            if node.results.reaction_force_x.get(load_case):
-                if node.results.reaction_force_x.get(load_combination):
-                    node.results.reaction_force_x[load_combination] += (
-                        factor * load_case.f_global[node.global_dofs[0]]
-                    )
-                else:
-                    node.results.reaction_force_x[load_combination] = (
-                        factor * load_case.f_global[node.global_dofs[0]]
-                    )
+        for load_case, factor in load_combination.load_cases.items():
+            if node.results.reaction_force_x.get(load_case) is not None:
+                if node.results.reaction_force_x.get(load_combination) is None:
+                    node.results.reaction_force_x[load_combination] = 0
+                node.results.reaction_force_x[load_combination] += (
+                    factor * load_case.f_global[node.global_dofs[0]]
+                )
 
-            if node.results.reaction_moment_y.get(load_case):
-                if node.results.reaction_moment_y.get(load_combination):
-                    node.results.reaction_moment_y[load_combination] += (
-                        factor * load_case.f_global[node.global_dofs[1]]
-                    )
-                else:
-                    node.results.reaction_moment_y[load_combination] = (
-                        factor * load_case.f_global[node.global_dofs[1]]
-                    )
+            if node.results.reaction_moment_y.get(load_case) is not None:
+                if node.results.reaction_moment_y.get(load_combination) is None:
+                    node.results.reaction_moment_y[load_combination] = 0
+                node.results.reaction_moment_y[load_combination] += (
+                    factor * load_case.f_global[node.global_dofs[1]]
+                )
 
-            if node.results.reaction_force_z.get(load_case):
-                if node.results.reaction_force_z.get(load_combination):
-                    node.results.reaction_force_z[load_combination] += (
-                        factor * load_case.f_global[node.global_dofs[2]]
-                    )
-                else:
-                    node.results.reaction_force_z[load_combination] = (
-                        factor * load_case.f_global[node.global_dofs[2]]
-                    )
+            if node.results.reaction_force_z.get(load_case) is not None:
+                if node.results.reaction_force_z.get(load_combination) is None:
+                    node.results.reaction_force_z[load_combination] = 0
+                node.results.reaction_force_z[load_combination] += (
+                    factor * load_case.f_global[node.global_dofs[2]]
+                )
 
     def save_displacements(self, node: Node, load_case: LoadCase) -> None:
         """
@@ -540,7 +572,7 @@ class FrameXZAnalysis(Analysis):
 
     # TODO: docstring
     def save_displacements_combination(
-        self, node: Node, load_combination: LoadCombination
+        self, node: Node, load_combination: LoadCaseCombination
     ) -> None:
         """
         Save the displacements for a specified node under a given load combination.
@@ -549,13 +581,13 @@ class FrameXZAnalysis(Analysis):
         specified :class:`LoadCase` and assigns them to the corresponding node results.
 
         :param node: A reference to an instance of the :class:`Node` class.
-        :param load_combination: A reference to an instance of the :class:`LoadCombination` class.
+        :param load_combination: A reference to an instance of the :class:`LoadCaseCombination` class.
         """
         node.results.translation_x[load_combination] = 0.0
         node.results.rotation_y[load_combination] = 0.0
         node.results.translation_z[load_combination] = 0.0
 
-        for load_case, factor in load_combination.combinations.items():
+        for load_case, factor in load_combination.load_cases.items():
             u_g = load_case.u_global[node.global_dofs]
 
             node.results.translation_x[load_combination] += factor * u_g[0]

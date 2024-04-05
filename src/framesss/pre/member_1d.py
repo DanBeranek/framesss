@@ -17,8 +17,7 @@ from framesss.fea.element_1d import Element1D
 from framesss.fea.node import Node
 from framesss.post.member_1d_results import Member1DResults
 from framesss.pre.member_load import DistributedLoadOnMember
-from framesss.pre.member_load import PointForceOnMember
-from framesss.pre.member_load import PointMomentOnMember
+from framesss.pre.member_load import PointLoadOnMember
 from framesss.pre.member_load import ThermalLoadOnMember
 
 if TYPE_CHECKING:
@@ -27,7 +26,6 @@ if TYPE_CHECKING:
     from framesss.fea.analysis.analysis import Analysis
     from framesss.fea.models.model import Model
     from framesss.pre.cases import LoadCase
-    from framesss.pre.material import Material
     from framesss.pre.section import Section
 
 MAX_DISTANCE_BETWEEN_SAMPLING_POINTS = 0.1  # (m)
@@ -58,7 +56,6 @@ class Member1D:
     :param label: A user-defined identifier for the member.
     :param element_type: Specifies the type of the element ('navier', 'timoshenko').
     :param nodes: The nodes at the ends of the member.
-    :param material: The material of the member.
     :param section: The cross-section of the member.
     :param hinges: Defines the type of connections at the start and the end of the  member
                    (e.g., fixed, hinged, or semirigid) to model the rotational stiffness accurately.
@@ -86,7 +83,6 @@ class Member1D:
         label: str,
         element_type: str,
         nodes: list[Node],
-        material: Material,
         section: Section,
         hinges: list[str] | list[BeamConnection],
         auxiliary_vector_xy_plane: npt.NDArray[np.float64],
@@ -97,7 +93,6 @@ class Member1D:
         self.label = label
         self.element_type = Element1DType(element_type)
         self.analysis = analysis
-        self.material = material
         self.section = section
         self.nodes = nodes
         self.hinge_start, self.hinge_end = (BeamConnection(hng) for hng in hinges)
@@ -127,7 +122,7 @@ class Member1D:
 
         self.distributed_loads: list[DistributedLoadOnMember] = []
         self.thermal_loads: list[ThermalLoadOnMember] = []
-        self.point_loads: list[PointForceOnMember | PointMomentOnMember] = []
+        self.point_loads: list[PointLoadOnMember] = []
 
         self.generated_nodes: list[Node] = []
         self.generated_elements: list[Element1D] = []
@@ -151,7 +146,6 @@ class Member1D:
             f"label='{self.label}', "
             f"element_type='{self.element_type}', "
             f"nodes={node_labels}, "
-            f"material='{self.material.label}', "
             f"section='{self.section.label}', "
             f"length={self.length:.2f}, "
             f"hinges={hinge_descriptions}, "
@@ -258,9 +252,9 @@ class Member1D:
 
         return new_node
 
-    def add_point_force(
+    def add_point_load(
         self,
-        load_components: list[float],
+        load_components: list[float] | npt.NDArray[np.float64],
         load_case: LoadCase,
         x: float,
         coordinate_system: str | LoadCoordinateSystem = LoadCoordinateSystem.GLOBAL,
@@ -269,17 +263,17 @@ class Member1D:
         ) = CoordinateDefinition.RELATIVE,
     ) -> None:
         """
-        Add a point force to the member at a specified location.
+        Add a point load to the member at a specified location.
 
-        This method creates and adds a :class:`PointForceOnMember` object representing a point force
-        applied to the :class:`Member1D`. The force is specified by its components, the position along
+        This method creates and adds a :class:`PointLoadOnMember` object representing a point load
+        applied to the :class:`Member1D`. The load is specified by its components, the position along
         the member where it is applied, the :class:`LoadCase` it belongs to, and its coordinate system.
 
         The position of the force can be defined relative to the member's length or as an
         absolute value, based on the ``coordinate_definition`` parameter. The method also records
         the position of the force as a discontinuity in the member's load distribution.
 
-        :param load_components: The components of the point force in the format [Fx, Fy, Fz],
+        :param load_components: The components of the point force in the format [Fx, Fy, Fz, Mx, My, Mz],
                                 representing the force in the x, y, and z directions.
         :param load_case: The :class:`LoadCase` to which this point force belongs.
         :param x: The position along the member's length where the force is applied.
@@ -292,7 +286,7 @@ class Member1D:
                                       value. Can be an instance of :class:`CoordinateDefinition`.
                                       Default to ``RELATIVE``.
         """
-        new_force = PointForceOnMember(
+        new_load = PointLoadOnMember(
             self,
             load_components,
             x,
@@ -300,48 +294,12 @@ class Member1D:
             coordinate_system,
             coordinate_definition,
         )
-        self.x_discontinuities = np.append(self.x_discontinuities, new_force.x)
-        self.point_loads.append(new_force)
-
-    def add_point_moment(
-        self,
-        load_components: list[float],
-        load_case: LoadCase,
-        x: float,
-        coordinate_definition: (
-            str | CoordinateDefinition
-        ) = CoordinateDefinition.RELATIVE,
-    ) -> None:
-        """
-        Add a point moment to the structural member at a specified location.
-
-        This method creates and adds a :class:`PointMomentOnMember` object representing a point moment
-        applied to the :class:`Member1D`. The moment is specified by its components, the position along
-        the member where it is applied and the :class:`LoadCase` it belongs to.
-
-        The position of the moment can be defined relative to the member's length or as an
-        absolute value, based on the ``coordinate_definition`` parameter. The method also records
-        the position of the moment as a discontinuity in the member's load distribution.
-
-        :param load_components: The components of the point force in the format [Fx, Fy, Fz],
-                                representing the force in the x, y, and z directions.
-        :param load_case: The :class:`LoadCase` to which this point force belongs.
-        :param x: The position along the member's length where the force is applied.
-                  This can be a relative value (0 to 1) or an absolute value.
-        :param coordinate_definition: Defines how the position 'x' is interpreted, either
-                                      as 'relative' to the member's length or as an 'absolute'
-                                      value. Can be an instance of :class:`CoordinateDefinition`.
-                                      Default to ``RELATIVE``.
-        """
-        new_moment = PointMomentOnMember(
-            self, load_components, x, load_case, coordinate_definition
-        )
-        self.x_discontinuities = np.append(self.x_discontinuities, new_moment.x)
-        self.point_loads.append(new_moment)
+        self.x_discontinuities = np.append(self.x_discontinuities, new_load.x)
+        self.point_loads.append(new_load)
 
     def add_distributed_load(
         self,
-        load_components: list[float],
+        load_components: list[float] | npt.NDArray[np.float64],
         load_case: LoadCase,
         x_start: float = 0.0,
         x_end: float = 1.0,
@@ -394,7 +352,7 @@ class Member1D:
 
     def add_thermal_load(
         self,
-        temperature_gradients: list[float],
+        temperature_gradients: list[float] | npt.NDArray[np.float64],
         load_case: LoadCase,
         x_start: float = 0.0,
         x_end: float = 1.0,
@@ -528,9 +486,6 @@ class Member1D:
         The method checks if a nodal load already exists for each node in the relevant load
         case. If not, it initializes a new :class:`NodalLoad` object. It then adds the load
         components from the point load to this nodal load.
-
-        :raises TypeError: If the point load type is not recognized (not a PointForceOnMember
-                             or PointMomentOnMember).
         """
         # assign point loads (forces and moments) to generated nodes
         for point_load in self.point_loads:
@@ -546,15 +501,8 @@ class Member1D:
             nodal_load = point_load.load_case.nodal_loads[node]
 
             # Update the NodalLoad components for this node in the given LoadCase
-            if isinstance(point_load, PointForceOnMember):
-                nodal_load.load_components[:3] += point_load.components_global
-            elif isinstance(point_load, PointMomentOnMember):
-                nodal_load.load_components[3:] += point_load.load_components
-            else:
-                raise TypeError(
-                    f"Unrecognized point load type: {type(point_load).__name__}. "
-                    f"Expected PointForceOnMember or PointMomentOnMember."
-                )
+
+            nodal_load.load_components += point_load.components_global
 
     def assign_distributed_loads(self) -> None:
         """

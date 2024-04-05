@@ -20,17 +20,17 @@ COORDINATE_DEFINITIONS = [CoordinateDefinition.ABSOLUTE, CoordinateDefinition.RE
 LOAD_COORDINATE_SYSTEMS = [LoadCoordinateSystem.LOCAL, LoadCoordinateSystem.GLOBAL]
 
 
-class PointForceOnMember:
+class PointLoadOnMember:
     """
-    Represents a point force acting on a member.
+    Represents a point load (forces and moments) acting on a member.
 
-    This class represents a point force applied to a member, allowing specification of the
-    force's magnitude and direction, its position along the member, and the coordinate
+    This class represents a point load applied to a member, allowing specification of the
+    load's magnitude and direction, its position along the member, and the coordinate
     system in which the force components are defined.
 
     :param member: A reference to an instance of the :class:`Member1D` class, representing
                    the member on which the force is acting.
-    :param load_components: A list of force components [Fx, Fy, Fz].
+    :param load_components: A list of force components [Fx, Fy, Fz, Mx, My, Mz].
     :param x: The position along the member's local x-axis where the force is applied,
               measured from start node. This value should be within the member's length.
     :param load_case: A reference to an instance of the :class:`LoadCase` class, representing
@@ -45,14 +45,14 @@ class PointForceOnMember:
     def __init__(
         self,
         member: Member1D,
-        load_components: list[float],
+        load_components: list[float] | npt.NDArray[np.float64],
         x: float,
         load_case: LoadCase,
         coordinate_system: str | LoadCoordinateSystem,
         coordinate_definition: str | CoordinateDefinition,
     ) -> None:
         """
-        Init the PointForceOnMember class.
+        Init the PointLoadOnMember class.
 
         :raises ValueError: If the position 'x' is outside the interval of the member's length.
         """
@@ -81,7 +81,7 @@ class PointForceOnMember:
         self.load_case = load_case
 
     def __repr__(self) -> str:
-        """Return a string representation of PointForceOnMember class."""
+        """Return a string representation of PointLoadOnMember class."""
         local_components_str = ", ".join(
             f"{comp:.2f}" for comp in self.components_local
         )
@@ -105,21 +105,25 @@ class PointForceOnMember:
         """
         Transform the load components based on the specified coordinate system.
 
-        This method takes the components of a point force and transforms them between the
+        This method takes the components of a point load and transforms them between the
         global coordinate system and local coordinate system of the member.
 
-        :param load_components: Array of the force components [Fx, Fy, Fz].
+        :param load_components: Array of the force components [Fx, Fy, Fz, Mx, My, Mz].
         :param coordinate_system: The coordinate system in which the provided load
                                   components are defined. Should be either 'global' or 'local',
                                   as defined in LoadCoordinateSystem. Defaults to 'global'.
 
-        :return: A tuple containing two np.ndarray objects: the first array is the force
+        :return: A tuple containing two np.ndarray objects: the first array is the load
                  components in the global coordinate system, and the second is in the local
                  coordinate system.
 
         :raises ValueError: If the specified coordinate system is neither 'global' nor 'local'.
         """
-        transformation_matrix = self.member.direction_cosine_matrix
+        load_components = np.array(load_components)
+
+        transformation_matrix = sp.linalg.block_diag(
+            self.member.direction_cosine_matrix, self.member.direction_cosine_matrix
+        )
 
         if coordinate_system == LoadCoordinateSystem.GLOBAL:
             components_global = load_components
@@ -136,69 +140,6 @@ class PointForceOnMember:
             )
 
         return components_global, components_local
-
-
-class PointMomentOnMember:
-    """
-    Represents a point moment acting on a member.
-
-    This class represents a point moment applied to a member, allowing specification of the
-    moment's magnitude and its position along the member.
-
-    :param member: A reference to an instance of the :class:`Member1D` class, representing
-                   the member on which the moment is acting.
-    :param load_components: A list of moment components [Mx, My, Mz].
-    :param x: The position along the member's local x-axis where the moment is applied,
-              measured from start node. This value should be within the member's length.
-    :param load_case: A reference to an instance of the :class:`LoadCase` class, representing
-                      the load case to which this moment belongs.
-    :param coordinate_definition: Specifies the definition of the position. Should be either
-                                  'absolute' or 'relative' as defined in :class:`CoordinateDefinition`.
-
-    :raises ValueError: If the position 'x' is outside the interval of the member's length.
-    """
-
-    def __init__(
-        self,
-        member: Member1D,
-        load_components: list[float],
-        x: float,
-        load_case: LoadCase,
-        coordinate_definition: str | CoordinateDefinition,
-    ) -> None:
-        """Init the PointMomentOnMember class."""
-        self.member = member
-
-        if coordinate_definition == CoordinateDefinition.RELATIVE:
-            x *= member.length
-        elif coordinate_definition == CoordinateDefinition.ABSOLUTE:
-            pass
-        else:
-            raise ValueError(
-                f"Unknown coordinate definition: '{coordinate_definition}.'"
-                f"Valid options are: {COORDINATE_DEFINITIONS}."
-            )
-
-        if 0 <= x <= member.length:
-            self.x = x
-        else:
-            raise ValueError(
-                f"Position of the moment is outside the beam interval [{0, member.length}], x: '{x}'."
-            )
-
-        self.load_components = np.array(load_components)
-        self.load_case = load_case
-
-    def __repr__(self) -> str:
-        """Return a string representation of the PointMomentOnMember class."""
-        components_str = ", ".join(f"{comp:.2f}" for comp in self.load_components)
-        return (
-            f"{self.__class__.__name__}("
-            f"member='{self.member.label}', "
-            f"load_components=[{components_str}], "
-            f"x={self.x:.2f}, "
-            f"load_case='{self.load_case.label}'"
-        )
 
 
 class DistributedLoadOnMember:
@@ -234,7 +175,7 @@ class DistributedLoadOnMember:
     def __init__(
         self,
         member: Member1D,
-        load_components: list[float],
+        load_components: list[float] | npt.NDArray[np.float64],
         x_start: float,
         x_end: float,
         load_case: LoadCase,
@@ -426,7 +367,7 @@ class ThermalLoadOnMember:
     def __init__(
         self,
         member: Member1D,
-        temperature_gradients: list[float],
+        temperature_gradients: list[float] | npt.NDArray[np.float64],
         x_start: float,
         x_end: float,
         load_case: LoadCase,

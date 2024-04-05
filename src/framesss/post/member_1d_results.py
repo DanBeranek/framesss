@@ -8,11 +8,12 @@ if TYPE_CHECKING:
     import numpy.typing as npt
     from typing_extensions import TypeAlias
 
+    from framesss.pre.cases import EnvelopeCombination
     from framesss.pre.cases import LoadCase
-    from framesss.pre.cases import LoadCombination
+    from framesss.pre.cases import LoadCaseCombination
     from framesss.pre.member_1d import Member1D
 
-    LoadType: TypeAlias = Union[LoadCase, LoadCombination]
+    LoadType: TypeAlias = Union[LoadCase, LoadCaseCombination, EnvelopeCombination]
     ResultDict: TypeAlias = dict[LoadType, npt.NDArray[np.float64]]
 
 
@@ -39,12 +40,14 @@ class Member1DResults:
         self.bending_moments_y: ResultDict = {}
         self.bending_moments_z: ResultDict = {}
 
-        self.extreme_axial_forces: ResultDict = {}
-        self.extreme_shear_forces_y: ResultDict = {}
-        self.extreme_shear_forces_z: ResultDict = {}
-        self.extreme_torsional_moments: ResultDict = {}
-        self.extreme_bending_moments_y: ResultDict = {}
-        self.extreme_bending_moments_z: ResultDict = {}
+        self.peak_x_local: ResultDict = {}
+
+        self.peak_axial_forces: ResultDict = {}
+        self.peak_shear_forces_y: ResultDict = {}
+        self.peak_shear_forces_z: ResultDict = {}
+        self.peak_torsional_moments: ResultDict = {}
+        self.peak_bending_moments_y: ResultDict = {}
+        self.peak_bending_moments_z: ResultDict = {}
 
         self.min_max_axial_forces: ResultDict = {}
         self.min_max_shear_forces_y: ResultDict = {}

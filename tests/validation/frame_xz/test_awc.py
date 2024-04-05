@@ -38,7 +38,7 @@ b2 = 0.3 * L
 c2 = 0.4 * L
 
 DUMMY_MAT = Material("foo", E, 1, 1, 1)
-DUMMY_SEC = Section("bar", 1, 1, 1, 1, I, 1, 1, 1)
+DUMMY_SEC = Section("bar", 1, 1, 1, 1, I, 1, 1, 1, DUMMY_MAT)
 
 
 def test_figure_1() -> None:
@@ -50,7 +50,7 @@ def test_figure_1() -> None:
     node_2 = model.add_node(
         "N2", [L], ["free", "free", "fixed", "free", "free", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
 
     # Load in [1] is applied in the negative z-direction
@@ -105,7 +105,7 @@ def test_figure_2() -> None:
     node_2 = model.add_node(
         "N2", [L], ["free", "free", "fixed", "free", "free", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
@@ -175,7 +175,7 @@ def test_figure_3() -> None:
     node_2 = model.add_node(
         "N2", [L], ["free", "free", "fixed", "free", "free", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
@@ -262,7 +262,7 @@ def test_figure_4() -> None:
     node_2 = model.add_node(
         "N2", [L], ["free", "free", "fixed", "free", "free", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
@@ -340,7 +340,7 @@ def test_figure_5() -> None:
     node_2 = model.add_node(
         "N2", [L], ["free", "free", "fixed", "free", "free", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
 
     # Load in [1] is applied in the negative z-direction
@@ -399,7 +399,7 @@ def test_figure_6() -> None:
     node_2 = model.add_node(
         "N2", [L], ["free", "free", "fixed", "free", "free", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
@@ -478,12 +478,12 @@ def test_figure_7() -> None:
     node_2 = model.add_node(
         "N2", [L], ["free", "free", "fixed", "free", "free", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P], load_case, x=0.5)
+    member.add_point_load([0, 0, -P, 0, 0, 0], load_case, x=0.5)
 
     solver = LinearStaticSolver(model)
     solver.solve()
@@ -552,14 +552,16 @@ def test_figure_8() -> None:
     node_2 = model.add_node(
         "N2", [L], ["free", "free", "fixed", "free", "free", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
     a, b = a1, b1
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P], load_case, x=a, coordinate_definition="absolute")
+    member.add_point_load(
+        [0, 0, -P, 0, 0, 0], load_case, x=a, coordinate_definition="absolute"
+    )
 
     solver = LinearStaticSolver(model)
     solver.solve()
@@ -632,16 +634,18 @@ def test_figure_9() -> None:
     node_2 = model.add_node(
         "N2", [L], ["free", "free", "fixed", "free", "free", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
     a = 0.3
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P], load_case, x=a, coordinate_definition="absolute")
-    member.add_point_force(
-        [0, 0, -P], load_case, x=L - a, coordinate_definition="absolute"
+    member.add_point_load(
+        [0, 0, -P, 0, 0, 0], load_case, x=a, coordinate_definition="absolute"
+    )
+    member.add_point_load(
+        [0, 0, -P, 0, 0, 0], load_case, x=L - a, coordinate_definition="absolute"
     )
 
     solver = LinearStaticSolver(model)
@@ -724,16 +728,18 @@ def test_figure_10() -> None:
     node_2 = model.add_node(
         "N2", [L], ["free", "free", "fixed", "free", "free", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
     a, b = a2, b2
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P], load_case, x=a, coordinate_definition="absolute")
-    member.add_point_force(
-        [0, 0, -P], load_case, x=L - b, coordinate_definition="absolute"
+    member.add_point_load(
+        [0, 0, -P, 0, 0, 0], load_case, x=a, coordinate_definition="absolute"
+    )
+    member.add_point_load(
+        [0, 0, -P, 0, 0, 0], load_case, x=L - b, coordinate_definition="absolute"
     )
 
     solver = LinearStaticSolver(model)
@@ -803,18 +809,18 @@ def test_figure_11() -> None:
     node_2 = model.add_node(
         "N2", [L], ["free", "free", "fixed", "free", "free", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
     a, b = a2, b2
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force(
-        [0, 0, -P1], load_case, x=a, coordinate_definition="absolute"
+    member.add_point_load(
+        [0, 0, -P1, 0, 0, 0], load_case, x=a, coordinate_definition="absolute"
     )
-    member.add_point_force(
-        [0, 0, -P2], load_case, x=L - b, coordinate_definition="absolute"
+    member.add_point_load(
+        [0, 0, -P2, 0, 0, 0], load_case, x=L - b, coordinate_definition="absolute"
     )
 
     solver = LinearStaticSolver(model)
@@ -884,7 +890,7 @@ def test_figure_11_combinations() -> None:
     node_2 = model.add_node(
         "N2", [L], ["free", "free", "fixed", "free", "free", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     lc1 = model.add_load_case("LC1")
     lc2 = model.add_load_case("LC2")
 
@@ -893,16 +899,18 @@ def test_figure_11_combinations() -> None:
         lc2: 2.0,
     }
 
-    comb = model.add_load_combination("CO1", combination)
+    comb = model.add_load_case_combination("CO1", combination)
 
     solver = LinearStaticSolver(model)
 
     a, b = a2, b2
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P1], lc1, x=a, coordinate_definition="absolute")
-    member.add_point_force(
-        [0, 0, -P2 / 2], lc2, x=L - b, coordinate_definition="absolute"
+    member.add_point_load(
+        [0, 0, -P1, 0, 0, 0], lc1, x=a, coordinate_definition="absolute"
+    )
+    member.add_point_load(
+        [0, 0, -P2 / 2, 0, 0, 0], lc2, x=L - b, coordinate_definition="absolute"
     )
 
     solver = LinearStaticSolver(model)
@@ -954,7 +962,7 @@ def test_figure_12() -> None:
     node_2 = model.add_node(
         "N2", [L], ["fixed", "free", "fixed", "free", "fixed", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
@@ -1007,7 +1015,7 @@ def test_figure_13() -> None:
     node_2 = model.add_node(
         "N2", [L], ["fixed", "free", "fixed", "free", "fixed", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
@@ -1060,14 +1068,16 @@ def test_figure_14() -> None:
     node_2 = model.add_node(
         "N2", [L], ["fixed", "free", "fixed", "free", "fixed", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
     a, b = a1, b1
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P], load_case, x=a, coordinate_definition="absolute")
+    member.add_point_load(
+        [0, 0, -P, 0, 0, 0], load_case, x=a, coordinate_definition="absolute"
+    )
 
     solver = LinearStaticSolver(model)
     solver.solve()
@@ -1133,7 +1143,7 @@ def test_figure_15() -> None:
     node_2 = model.add_node(
         "N2", [L], ["fixed", "free", "fixed", "free", "fixed", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
@@ -1189,12 +1199,12 @@ def test_figure_16() -> None:
     node_2 = model.add_node(
         "N2", [L], ["fixed", "free", "fixed", "free", "fixed", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P], load_case, x=0.5)
+    member.add_point_load([0, 0, -P, 0, 0, 0], load_case, x=0.5)
 
     solver = LinearStaticSolver(model)
     solver.solve()
@@ -1264,14 +1274,16 @@ def test_figure_17() -> None:
     node_2 = model.add_node(
         "N2", [L], ["fixed", "free", "fixed", "free", "fixed", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
 
     a, b = a1, b1
 
     # Load in [1] is applied in the negative z-direction
-    member.add_point_force([0, 0, -P], load_case, x=a, coordinate_definition="absolute")
+    member.add_point_load(
+        [0, 0, -P, 0, 0, 0], load_case, x=a, coordinate_definition="absolute"
+    )
 
     solver = LinearStaticSolver(model)
     solver.solve()
@@ -1355,7 +1367,7 @@ def test_figure_18() -> None:
     node_3 = model.add_node(
         "N3", [L + a], ["free", "free", "free", "free", "free", "free"]
     )
-    member = model.add_member("M1", "navier", [node_1, node_3], DUMMY_MAT, DUMMY_SEC)
+    member = model.add_member("M1", "navier", [node_1, node_3], DUMMY_SEC)
 
     node_2 = member.add_node(
         "N2",
@@ -1468,8 +1480,8 @@ def test_figure_19() -> None:
         "N3", [L + a], ["free", "free", "free", "free", "free", "free"]
     )
 
-    member_1 = model.add_member("M1", "navier", [node_1, node_2], DUMMY_MAT, DUMMY_SEC)
-    member_2 = model.add_member("M2", "navier", [node_2, node_3], DUMMY_MAT, DUMMY_SEC)
+    member_1 = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
+    member_2 = model.add_member("M2", "navier", [node_2, node_3], DUMMY_SEC)
 
     load_case = model.add_load_case("LC1")
     solver = LinearStaticSolver(model)
