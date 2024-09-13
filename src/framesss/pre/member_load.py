@@ -79,6 +79,7 @@ class PointLoadOnMember:
             np.array(load_components), coordinate_system
         )
         self.load_case = load_case
+        self.coordinate_system = coordinate_system
 
     def __repr__(self) -> str:
         """Return a string representation of PointLoadOnMember class."""
@@ -231,6 +232,7 @@ class DistributedLoadOnMember:
             np.array(load_components), coordinate_system, location
         )
         self.load_case = load_case
+        self.coordinate_system = coordinate_system
 
     def __repr__(self) -> str:
         """Return string representation of the DistributedLoadOnMember class."""
