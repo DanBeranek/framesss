@@ -241,7 +241,13 @@ class Member1D:
             [x, 0, 0]
         )
 
-        new_node = Node(label, coords, fixities, spring_stiff)
+        new_node = Node(
+            label=label,
+            coords=coords,
+            fixity=fixities,
+            spring_stiffness=spring_stiff,
+            is_user_defined=True,
+        )
 
         self.x_user_defined_nodes = np.append(self.x_user_defined_nodes, x)
         np.sort(self.x_user_defined_nodes)
