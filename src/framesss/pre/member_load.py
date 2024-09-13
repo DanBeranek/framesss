@@ -233,6 +233,7 @@ class DistributedLoadOnMember:
         )
         self.load_case = load_case
         self.coordinate_system = coordinate_system
+        self.location = location
 
     def __repr__(self) -> str:
         """Return string representation of the DistributedLoadOnMember class."""
