@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "framesss"
-version = "0.0.8"
+version = "0.0.9"
 description = "framesss"
 authors = ["Daniel Beranek <daniel.beraanek@gmail.com>"]
 license = "MIT"
