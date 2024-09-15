@@ -4,6 +4,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from framesss.utils import assemble_subarray_at_indices
+from framesss.utils import is_invertible
 
 
 def test_assemble_subarray_at_indices() -> None:
@@ -22,3 +23,13 @@ def test_assemble_subarray_at_indices() -> None:
     )
 
     assert_array_equal(large_array, expected_array)
+
+
+def test_is_invertible() -> None:
+    a = np.random.rand(10, 10)
+    b = np.random.rand(10, 10)
+
+    b[-1] = b[0] + b[1]  # last row is a linear combination of the first two rows
+
+    assert is_invertible(a)
+    assert not is_invertible(b)

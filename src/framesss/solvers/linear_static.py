@@ -6,6 +6,8 @@ import numpy as np
 import scipy as sp  # type: ignore[import-untyped]
 
 from framesss.solvers.solver import Solver
+from framesss.utils import is_invertible
+from framesss.errors import SingularMatrixError
 
 if TYPE_CHECKING:
     from framesss.fea.models.model import Model
@@ -54,8 +56,11 @@ class LinearStaticSolver(Solver):
 
         # Check for stable k_ff global matrix by verifying its determinant (a very low
         # determinant indicates that the matrix is badly conditioned and may be singular)
-        if np.linalg.det(k_ff.todense()) < 10.0e-12:
-            raise ValueError("Singular stiffness matrix.")
+        if not is_invertible(k_ff.todense()):
+            raise SingularMatrixError(
+                f"Singular stiffness matrix. Determinant: {np.linalg.det(k_ff.todense())}",
+                matrix=k_ff
+            )
 
         # Partition system of equations
         k_fc = k_global[: (neq_free + neq_spring), (neq_free + neq_spring) : neq]
