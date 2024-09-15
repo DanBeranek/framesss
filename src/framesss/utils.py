@@ -51,6 +51,16 @@ def assemble_subarray_at_indices(
     array[rows, cols] += subarray.flatten()
 
 
+def is_invertible(a: npt.NDArray[np.float64]) -> bool:
+    """
+    Check if a given matrix is invertible.
+
+    More info: https://numpy.org/doc/stable/reference/generated/numpy.linalg.matrix_rank.html
+    https://stackoverflow.com/questions/17931613/how-to-decide-a-whether-a-matrix-is-singular-in-python-numpy
+    """
+    return a.shape[0] == a.shape[1] and np.linalg.matrix_rank(a) == a.shape[0]
+
+
 class DictProxy:
     """
     A proxy class for managing access to a dictionary attribute of another object.
