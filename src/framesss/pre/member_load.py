@@ -79,6 +79,7 @@ class PointLoadOnMember:
             np.array(load_components), coordinate_system
         )
         self.load_case = load_case
+        self.coordinate_system = coordinate_system
 
     def __repr__(self) -> str:
         """Return a string representation of PointLoadOnMember class."""
@@ -170,6 +171,8 @@ class DistributedLoadOnMember:
                      or on the projection into the global coordinate system.
                      For 'local' coordinate_system, the only option is 'length'.
                      For 'global' coordinate_system, the options are 'length' and 'projection'.
+    :ivar components: The force components of the distributed load [fx1, fy1, fz1, fx2, fy2, fz2].
+                      Stored for the graphical representation of the load.
     """
 
     def __init__(
@@ -227,10 +230,13 @@ class DistributedLoadOnMember:
         else:
             raise ValueError("wtf just happened.")
 
+        self.components = np.array(load_components)
         self.components_global, self.components_local = self.set_load_components(
             np.array(load_components), coordinate_system, location
         )
         self.load_case = load_case
+        self.coordinate_system = coordinate_system
+        self.location = location
 
     def __repr__(self) -> str:
         """Return string representation of the DistributedLoadOnMember class."""
