@@ -407,14 +407,19 @@ class FrameXZAnalysis(Analysis):
         :param member: A reference to an instance of the :class:`Member1D` class.
         :param envelope: A reference to an instance of the :class:`EnvelopeCombination`.
         """
+        zero_array = np.zeros(member.x_local.shape)
+
         axial_forces = np.vstack(
             [member.results.axial_forces[case] for case in envelope.cases]
+            + [zero_array]
         )
         shear_forces_z = np.vstack(
             [member.results.shear_forces_z[case] for case in envelope.cases]
+            + [zero_array]
         )
         bending_moments_y = np.vstack(
             [member.results.bending_moments_y[case] for case in envelope.cases]
+            + [zero_array]
         )
 
         member.results.axial_forces[envelope] = np.array(

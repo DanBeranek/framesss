@@ -80,3 +80,61 @@ def test_simple_beam_3_point_loads() -> None:
     assert_array_almost_equal(
         member.results.shear_forces_z[envelope], np.array([min_shear, max_shear])
     )
+
+
+def test_simple_beam_uniformly_distributed_load() -> None:
+    """Simple beam - Uniformly Distributed Load."""
+    model = FrameXZModel()
+    node_1 = model.add_node(
+        "N1", [], ["fixed", "free", "fixed", "free", "free", "free"]
+    )
+    node_2 = model.add_node(
+        "N2", [L], ["free", "free", "fixed", "free", "free", "free"]
+    )
+    member = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC)
+
+    lc1 = model.add_load_case("LC1")
+    member.add_distributed_load(
+        load_components=[0, 0, -F, 0, 0, -F],
+        load_case=lc1
+    )
+
+    lc2 = model.add_load_case("LC2")
+    member.add_distributed_load(
+        load_components=[0, 0, -0.5*F, 0, 0, -0.5*F],
+        load_case=lc2
+    )
+
+    envelope = model.add_envelope("ENV1", [lc1, lc2])
+
+    solver = LinearStaticSolver(model)
+    solver.solve(verbose=True)
+
+    # EXPECTED RESULTS:
+    x = member.x_local
+
+    min_moments = np.zeros(int(x.shape[0]))
+    max_moments = F * L / 2 * x - F * x ** 2 / 2
+
+    assert_array_almost_equal(
+        member.results.bending_moments_y[envelope],
+        np.array([min_moments, max_moments]),
+    )
+
+    # min_shear_1 = np.full(int(x.shape[0] / 4), -1.0)
+    # min_shear_2 = np.full(int(x.shape[0] / 4), -1.0)
+    # min_shear_3 = np.full(int(x.shape[0] / 4), -0.5)
+    # min_shear_4 = np.full(int(x.shape[0] / 4), -1.5)
+    #
+    # min_shear = np.concatenate((min_shear_1, min_shear_2, min_shear_3, min_shear_4))
+    #
+    # max_shear_1 = np.full(int(x.shape[0] / 4), +1.5)
+    # max_shear_2 = np.full(int(x.shape[0] / 4), +0.5)
+    # max_shear_3 = np.full(int(x.shape[0] / 4), +1.0)
+    # max_shear_4 = np.full(int(x.shape[0] / 4), +1.0)
+    #
+    # max_shear = np.concatenate((max_shear_1, max_shear_2, max_shear_3, max_shear_4))
+    #
+    # assert_array_almost_equal(
+    #     member.results.shear_forces_z[envelope], np.array([min_shear, max_shear])
+    # )
