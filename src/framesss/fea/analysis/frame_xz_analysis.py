@@ -496,6 +496,39 @@ class FrameXZAnalysis(Analysis):
                 factor * member.results.translations_z[load_case]
             )
 
+    def save_internal_displacements_on_member_envelope(
+        self, member: Member1D, envelope: EnvelopeCombination
+    ) -> None:
+        """
+        Compute and save the internal displacements for a member under a specified load case.
+
+        This method aggregates displacement data from each :class:`Element1D` of the :class:`Member1D`,
+
+        :param member: A reference to an instance of the :class:`Member1D` class.
+        :param envelope: A reference to an instance of the :class:`LoadCaseCombination` class.
+        """
+        trans_x = np.vstack(
+            [member.results.translations_x[case] for case in envelope.cases]
+        )
+
+        trans_z = np.vstack(
+            [member.results.translations_z[case] for case in envelope.cases]
+        )
+
+        member.results.translations_x[envelope] = np.array(
+            [
+                np.min(trans_x, axis=0),
+                np.max(trans_x, axis=0)
+            ]
+        )
+
+        member.results.translations_z[envelope] = np.array(
+            [
+                np.min(trans_z, axis=0),
+                np.max(trans_z, axis=0)
+            ]
+        )
+
     def save_reactions(self, node: Node, load_case: LoadCase) -> None:
         """
         Save the reaction forces and moments for a specified node under a given load case.
@@ -558,6 +591,38 @@ class FrameXZAnalysis(Analysis):
                 node.results.reaction_force_z[load_combination] += (
                     factor * load_case.f_global[node.global_dofs[2]]
                 )
+
+    def save_reactions_envelope(
+        self, node: Node, envelope: EnvelopeCombination
+    ) -> None:
+        """
+        Save the reaction forces and moments for a specified node for given Envelope.
+
+        This method extracts reaction forces and moments from the global force vector for the specified
+        :class:`LoadCase` and assigns them to the corresponding node results.
+
+        :param node: A reference to an instance of the :class:`Node` class.
+        :param envelope: A reference to an instance of the :class:`EnvelopeCombination`.
+        """
+        reactions_x = np.vstack(
+            [node.results.reaction_force_x.get(case, 0) for case in envelope.cases]
+        )
+        reactions_z = np.vstack(
+            [node.results.reaction_force_z.get(case, 0) for case in envelope.cases]
+        )
+        moments_y = np.vstack(
+            [node.results.reaction_moment_y.get(case, 0) for case in envelope.cases]
+        )
+
+        node.results.reaction_force_x[envelope] = np.array(
+            [np.min(reactions_x, axis=0), np.max(reactions_x, axis=0)]
+        )
+        node.results.reaction_force_z[envelope] = np.array(
+            [np.min(reactions_z, axis=0), np.max(reactions_z, axis=0)]
+        )
+        node.results.reaction_moment_y[envelope] = np.array(
+            [np.min(moments_y, axis=0), np.max(moments_y, axis=0)]
+        )
 
     def save_displacements(self, node: Node, load_case: LoadCase) -> None:
         """

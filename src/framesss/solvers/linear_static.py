@@ -227,6 +227,8 @@ class LinearStaticSolver(Solver):
                     f" : Computing internal forces for envelope: {envelope.label}..."
                 )
             self.save_envelope_internal_forces(envelope)
+            self.save_member_internal_displacements_envelope(envelope)
+            self.save_reactions_envelope(envelope)
 
         if verbose:
             print(f"{n_steps}/{n_steps} : Analysis successfully finished.")

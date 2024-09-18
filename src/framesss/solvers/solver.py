@@ -182,6 +182,25 @@ class Solver(ABC):
                 member, load_combination
             )
 
+    def save_member_internal_displacements_envelope(
+        self, envelope: EnvelopeCombination
+    ) -> None:
+        """
+        Save the displacements for each member in the model under a specified load case.
+
+        This method iterates over all members in the model and invokes a process to calculate and store
+        the displacements (translations and rotations) experienced by each member due to the applied loads
+        in the given load case. The calculation is performed by the `save_internal_displacements_on_member`
+        method of the analysis model, which takes into account both global and local effects to
+        accurately determine the stresses along each member.
+
+        :param envelope: A reference to an instance of the :class:`EnvelopeCombination` class.
+        """
+        for member in self.model.members:
+            self.model.analysis.save_internal_displacements_on_member_envelope(
+                member, envelope
+            )
+
     def save_reactions(self, load_case: LoadCase) -> None:
         """
         Save the reaction forces and moments for each node in the model under a specified load case.
@@ -206,6 +225,18 @@ class Solver(ABC):
         """
         for node in self.model.nodes:
             self.model.analysis.save_reactions_combination(node, load_combination)
+
+    def save_reactions_envelope(self, envelope: EnvelopeCombination) -> None:
+        """
+        Save the reaction forces and moments for each node in the model for specified envelope.
+
+        This method iterates over all nodes in the model, retrieving and storing the reaction forces
+        and moments resulting from the applied loads and constraints defined by the load case.
+
+        :param envelope: A reference to an instance of the :class:`EnvelopeCombination` class.
+        """
+        for node in self.model.nodes:
+            self.model.analysis.save_reactions_envelope(node, envelope)
 
     def save_displacements(self, load_case: LoadCase) -> None:
         """

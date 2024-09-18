@@ -265,6 +265,20 @@ class Analysis(ABC):
         pass
 
     @abstractmethod
+    def save_internal_displacements_on_member_envelope(
+        self, member: Member1D, envelope: EnvelopeCombination
+    ) -> None:
+        """
+        Compute and save the internal displacements for a member under a specified load case.
+
+        This method aggregates displacement data from each :class:`Element1D` of the :class:`Member1D`,
+
+        :param member: A reference to an instance of the :class:`Member1D` class.
+        :param envelope: A reference to an instance of the :class:`LoadCaseCombination` class.
+        """
+        pass
+
+    @abstractmethod
     def save_reactions(self, node: Node, load_case: LoadCase) -> None:
         """
         Save the reaction forces and moments for a specified node under a given load case.
@@ -301,6 +315,12 @@ class Analysis(ABC):
         direction is not `SupportFixity.FIXED_DOF` (i.e. reaction storage for a particular direction
         is None), this method will not attempt to save reactions in that direction.
         """
+        pass
+
+    @abstractmethod
+    def save_reactions_envelope(
+        self, node: Node, envelope: EnvelopeCombination
+    ) -> None:
         pass
 
     @abstractmethod
