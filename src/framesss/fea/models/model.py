@@ -203,16 +203,21 @@ class Model:
         self.envelopes.add(new_envelope)
         return new_envelope
 
-    def discretize_members(self) -> None:
+    def discretize_members(self, max_element_length: None | float = None) -> None:
         """
         Discretize all members in model and assign IDs to nodes and elements.
 
         This method iterates over each member in the model, calling its `discretize`
         method to divide it into finite elements. After discretization, it assigns
         a unique ID to each node and element in the model.
+
+        :param max_element_length: The maximum length of the finite elements to be used
+                                   for discretization.
+                                   If set to `None`, members will be divided only
+                                   in discontinuities. Default is `None`.
         """
         for member in self.members:
-            member.discretize(self)
+            member.discretize(self, max_element_length=max_element_length)
 
         for i, node in enumerate(self.nodes):
             node.id = i
