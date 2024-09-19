@@ -8,7 +8,7 @@ import scipy as sp  # type: ignore[import-untyped]
 from framesss.enums import AnalysisModelType
 from framesss.enums import DoF
 from framesss.fea.analysis.analysis import Analysis
-from framesss.pre.cases import EnvelopeCombination
+from framesss.pre.cases import EnvelopeCombination, NonlinearLoadCaseCombination
 from framesss.pre.cases import LoadCase
 from framesss.utils import assemble_subarray_at_indices
 
@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from framesss.fea.models.model import Model
     from framesss.fea.node import Node
     from framesss.pre.cases import LoadCaseCombination
+    from framesss.pre.cases import NonlinearLoadCaseCombination
     from framesss.pre.member_1d import Member1D
 
 
@@ -154,6 +155,38 @@ class FrameXZAnalysis(Analysis):
             load_case.f_global[
                 model.dof_connectivity_matrix[1, node_idx]
             ] += load.load_components[4]
+
+    def assemble_nodal_loads_nonlinear_combination(
+        self,
+        model: Model,
+        combination: NonlinearLoadCaseCombination
+    ) -> None:
+        """
+        Assemble nodal load components to the global force vector for a given nonlinear load case combination.
+
+        This method iterates over all load cases and its nodal loads defined in a nonlinear combination and adds
+        their factored components to the global force vector.
+
+        :param model: A reference to an instance of the :class:`Model` class.
+        :param combination: A reference to an instance of the :class:`NonlinearLoadCaseCombination` class.
+        """
+        for load_case, factor in combination.load_cases.items():
+            for node, load in load_case.nodal_loads.items():
+                node_idx = node.id
+                # Add applied force in global X coordinate_system
+                combination.f_global[
+                    model.dof_connectivity_matrix[0, node_idx]
+                ] += load.load_components[0] * factor
+
+                # Add applied force in global Z coordinate_system
+                combination.f_global[
+                    model.dof_connectivity_matrix[2, node_idx]
+                ] += load.load_components[2] * factor
+
+                # Add applied moment about global Y coordinate_system
+                combination.f_global[
+                    model.dof_connectivity_matrix[1, node_idx]
+                ] += load.load_components[4] * factor
 
     def get_fixed_end_forces(self, load: ElementLoad) -> npt.NDArray[np.float64]:
         """

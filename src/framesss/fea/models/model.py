@@ -11,6 +11,7 @@ from framesss.fea.node import Node
 from framesss.pre.cases import EnvelopeCombination
 from framesss.pre.cases import LoadCase
 from framesss.pre.cases import LoadCaseCombination
+from framesss.pre.cases import NonlinearLoadCaseCombination
 from framesss.pre.member_1d import Member1D
 
 if TYPE_CHECKING:
@@ -41,7 +42,8 @@ class Model:
     :ivar load_cases: A set of :class:`LoadCase` instances, each defining a unique set
                       of loading conditions to be analyzed.
     :ivar load_combinations: A set of :class:`LoadCaseCombination` instances, defining
-                             load_cases of load cases for analysis.
+                             load cases for analysis.
+    :ivar nonlinear_load_combinations: A set of :class:`NonlinearLoadCaseCombination` instances.
     :ivar elements: A set of :class:`Element1D` instances.
     :ivar neq_free: Number of equations corresponding to free DoFs.
     :ivar neq_fixed: Number of equations corresponding to fixed DoFs.
@@ -63,6 +65,7 @@ class Model:
         self.members: set[Member1D] = set()
         self.load_cases: set[LoadCase] = set()
         self.load_combinations: set[LoadCaseCombination] = set()
+        self.nonlinear_load_combinations: set[NonlinearLoadCaseCombination] = set()
         self.envelopes: set[EnvelopeCombination] = set()
         self.elements: set[Element1D] = set()
 
@@ -188,6 +191,20 @@ class Model:
         """
         new_combination = LoadCaseCombination(label, combination)
         self.load_combinations.add(new_combination)
+        return new_combination
+
+    def add_nonlinear_load_case_combination(
+        self, label: str, combination: dict[LoadCase, float]
+    ) -> NonlinearLoadCaseCombination:
+        """
+        Add and return new :class:`NonlinearLoadCaseCombination` instance.
+
+        :param label: Unique user-defined label of the load combination.
+        :param combination: Dictionary mapping :class:`LoadCase` instances
+                            to their scaling factors.
+        """
+        new_combination = NonlinearLoadCaseCombination(label, combination)
+        self.nonlinear_load_combinations.add(new_combination)
         return new_combination
 
     def add_envelope(

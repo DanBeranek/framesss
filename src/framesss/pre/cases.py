@@ -114,6 +114,56 @@ class LoadCaseCombination:
         self.load_cases[load_case] = factor
 
 
+class NonlinearLoadCaseCombination(LoadCase):
+    """Represent a combination of load cases for nonlinear analysis."""
+    def __init__(self, label: str, load_cases: dict[LoadCase, float]) -> None:
+        """Init the NonlinearLoadCaseCombination class."""
+        super().__init__(label)
+        self.label = label
+        self.load_cases = load_cases
+
+    def __repr__(self):
+        """Return a string representation of NonlinearLoadCaseCombination object."""
+        return f"{self.__class__.__name__}({self.label})"
+
+    def add_load_case(self, load_case: LoadCase, factor: float) -> None:
+        """
+        Add load case to load combination.
+
+        :param load_case: A reference to an instance of the :class:`LoadCase` class.
+        :param factor: The factor for a given load case.
+        """
+        self.load_cases[load_case] = factor
+
+    def assemble_equivalent_nodal_loads(self) -> None:
+        """
+        Add member equivalent nodal loads to global force vector.
+
+        This method iterates over all load cases in the nonlinear combination
+        and assembles the equivalent nodal loads for each element in the model.
+
+        Assembles member equivalent nodal load vector (in global system)
+        to any term of the global forcing vector, including the terms that
+        correspond to constrained DoFs.
+        """
+        for load_case, factor in self.load_cases.items():
+            for elem, distributed_load in load_case.element_distributed_loads.items():
+                # get global dofs
+                dofs = elem.global_dofs
+                # get member equivalent nodal loads
+                feg = distributed_load.get_equivalent_nodal_actions()
+                # assemble equivalent nodal loads to global force vector
+                self.f_global[dofs] += feg * factor
+
+            for elem, thermal_load in load_case.element_thermal_loads.items():
+                # get global dofs
+                dofs = elem.global_dofs
+                # get member equivalent nodal loads
+                feg = thermal_load.get_equivalent_nodal_actions()
+                # assemble equivalent nodal loads to global force vector
+                self.f_global[dofs] += feg * factor
+
+
 class EnvelopeCombination:
     """
     Represent an envelope of load cases and (or) load combinations.

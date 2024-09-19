@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from framesss.pre.cases import EnvelopeCombination
     from framesss.pre.cases import LoadCase
     from framesss.pre.cases import LoadCaseCombination
+    from framesss.pre.cases import NonlinearLoadCaseCombination
     from framesss.pre.member_1d import Member1D
 
 
@@ -140,6 +141,23 @@ class Analysis(ABC):
 
         :param model: A reference to an instance of the :class:`Model` class.
         :param load_case: A reference to an instance of the :class:`LoadCase` class.
+        """
+        pass
+
+    @abstractmethod
+    def assemble_nodal_loads_nonlinear_combination(
+        self,
+        model: Model,
+        combination: NonlinearLoadCaseCombination
+    ) -> None:
+        """
+        Assemble nodal load components to the global force vector for a given nonlinear load case combination.
+
+        This method iterates over all load cases and its nodal loads defined in a nonlinear combination and adds
+        their factored components to the global force vector.
+
+        :param model: A reference to an instance of the :class:`Model` class.
+        :param combination: A reference to an instance of the :class:`NonlinearLoadCaseCombination` class.
         """
         pass
 
