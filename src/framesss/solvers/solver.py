@@ -268,7 +268,9 @@ class Solver(ABC):
     @abstractmethod
     def solve_load_case(self, load_case: LoadCase) -> None:
         """Solve the system of equilibrium equations for a specific load case."""
-        pass
+        raise NotImplementedError(
+            "The 'solve_load_case' method must be implemented in concrete subclasses."
+        )
 
     @abstractmethod
     def solve(self, verbose: bool) -> None:
