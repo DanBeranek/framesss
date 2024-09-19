@@ -55,7 +55,7 @@ class Solver(ABC):
         """
         self.model.k_global = sp.sparse.coo_matrix((self.model.neq, self.model.neq))
 
-        for case in self.model.load_cases:
+        for case in self.model.load_cases.union(self.model.nonlinear_load_combinations):
             case.f_global = np.zeros(self.model.neq)
             case.u_global = np.zeros(self.model.neq)
 
