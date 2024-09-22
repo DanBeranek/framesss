@@ -121,12 +121,16 @@ class Analysis(ABC):
 
     @abstractmethod
     def get_element_local_stiffness_matrix(
-        self, element: Element1D
+        self,
+        element: Element1D,
+        nonlinear_combination: NonlinearLoadCaseCombination | None = None
     ) -> npt.NDArray[np.float64]:
         """
         Assembles and returns the local stiffness matrix for a specified element.
 
         :param element: A reference to an instance of the :class:`Element1D` class.
+        :param nonlinear_combination: A reference to an instance of the
+                                      :class:`NonlinearLoadCaseCombination` class.
         :return: The local stiffness matrix of the specified element.
         """
         pass
@@ -338,6 +342,12 @@ class Analysis(ABC):
     @abstractmethod
     def save_reactions_envelope(
         self, node: Node, envelope: EnvelopeCombination
+    ) -> None:
+        pass
+
+    @abstractmethod
+    def save_curvatures_xz(
+        self, element: Element1D, combination:NonlinearLoadCaseCombination
     ) -> None:
         pass
 

@@ -101,12 +101,19 @@ class FrameXZAnalysis(Analysis):
         return transformation_matrix  # type: ignore[no-any-return]
 
     def get_element_local_stiffness_matrix(
-        self, element: Element1D
+        self,
+        element: Element1D,
+        nonlinear_combination: NonlinearLoadCaseCombination | None = None,
+        modulus_type: str = "tangent",
     ) -> npt.NDArray[np.float64]:
         """
         Assembles and returns the local stiffness matrix for a specified element.
 
         :param element: A reference to an instance of the :class:`Element1D` class.
+        :param nonlinear_combination: A reference to an instance of the
+                                      :class:`NonlinearLoadCaseCombination` class.
+        :param modulus_type: The type of modulus to use for calculation.
+                             Can be either 'tangent' or 'secant'.
         :return: The local stiffness matrix of the specified element.
         """
         # Initialize member stiffness matrix in local system
@@ -122,7 +129,9 @@ class FrameXZAnalysis(Analysis):
         assemble_subarray_at_indices(kel, axial_coefficients, self.dof_elem_axial)
 
         # Compute flexural stiffness coefficients
-        flexural_coefficients = element.get_flexural_xz_stiffness_coefficients()
+        flexural_coefficients = element.get_flexural_xz_stiffness_coefficients(
+            nonlinear_combination=nonlinear_combination
+        )
         assemble_subarray_at_indices(
             kel, flexural_coefficients, self.dof_elem_flexural_xz
         )
@@ -656,6 +665,21 @@ class FrameXZAnalysis(Analysis):
         node.results.reaction_moment_y[envelope] = np.array(
             [np.min(moments_y, axis=0), np.max(moments_y, axis=0)]
         )
+
+    def save_curvatures_xz(self, element: Element1D, combination:NonlinearLoadCaseCombination) -> None:
+        u_start = combination.u_global[element.nodes[0].global_dofs]
+        u_end = combination.u_global[element.nodes[-1].global_dofs]
+
+        u = np.array([
+            [u_start[2]],
+            [u_start[1]],
+            [u_end[2]],
+            [u_end[1]]
+        ])
+
+        B = element.get_second_derivative_of_flexural_xz_displacement_shape_functions(x=element.length/2)
+
+        element.curvature_xz[combination] = float(B @ u)
 
     def save_displacements(self, node: Node, load_case: LoadCase) -> None:
         """

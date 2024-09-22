@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     import numpy.typing as npt
 
     from framesss.fea.models.model import Model
-    from framesss.pre.cases import EnvelopeCombination
+    from framesss.pre.cases import EnvelopeCombination, NonlinearLoadCaseCombination
     from framesss.pre.cases import LoadCase
     from framesss.pre.cases import LoadCaseCombination
 
@@ -59,7 +59,11 @@ class Solver(ABC):
             case.f_global = np.zeros(self.model.neq)
             case.u_global = np.zeros(self.model.neq)
 
-    def assemble_global_stiffness_matrix(self) -> None:
+    def assemble_global_stiffness_matrix(
+        self,
+        nonlinear_combination: NonlinearLoadCaseCombination | None = None,
+        modulus_type: str = "tangent",
+    ) -> None:
         """
         Assembles the global stiffness matrix for the entire model using the sparse COO format.
 
@@ -67,6 +71,10 @@ class Solver(ABC):
         its associated global degrees of freedom (DoFs). These matrices are then combined into a single global
         stiffness matrix. The sparse COO format is utilized to efficiently store and manage the non-zero values
         of the stiffness matrix.
+
+        :param nonlinear_combination: Reference to :class:`NonlinearLoadCaseCombination`.
+        :param modulus_type: The type of modulus to use for calculation.
+                             Can be either 'tangent' or 'secant'.
         """
         row: npt.NDArray[np.int64] = np.empty(0, dtype=np.int64)
         col: npt.NDArray[np.int64] = np.empty(0, dtype=np.int64)
@@ -76,7 +84,10 @@ class Solver(ABC):
             dofs = element.global_dofs
             n_dofs = len(dofs)
 
-            keg = element.get_element_global_stiffness_matrix()
+            keg = element.get_element_global_stiffness_matrix(
+                nonlinear_combination = nonlinear_combination,
+                modulus_type=modulus_type
+            )
 
             r = np.repeat(dofs, n_dofs)
             c = np.tile(dofs, n_dofs)

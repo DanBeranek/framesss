@@ -122,6 +122,8 @@ class NonlinearLoadCaseCombination(LoadCase):
         self.label = label
         self.load_cases = load_cases
 
+        self.set_loads()
+
     def __repr__(self):
         """Return a string representation of NonlinearLoadCaseCombination object."""
         return f"{self.__class__.__name__}({self.label})"
@@ -135,33 +137,38 @@ class NonlinearLoadCaseCombination(LoadCase):
         """
         self.load_cases[load_case] = factor
 
-    def assemble_equivalent_nodal_loads(self) -> None:
+    def set_loads(self):
         """
-        Add member equivalent nodal loads to global force vector.
-
-        This method iterates over all load cases in the nonlinear combination
-        and assembles the equivalent nodal loads for each element in the model.
-
-        Assembles member equivalent nodal load vector (in global system)
-        to any term of the global forcing vector, including the terms that
-        correspond to constrained DoFs.
+        This method must be called after model.discretize() method.
         """
         for load_case, factor in self.load_cases.items():
-            for elem, distributed_load in load_case.element_distributed_loads.items():
-                # get global dofs
-                dofs = elem.global_dofs
-                # get member equivalent nodal loads
-                feg = distributed_load.get_equivalent_nodal_actions()
-                # assemble equivalent nodal loads to global force vector
-                self.f_global[dofs] += feg * factor
+            for node, lc_nodal_load in load_case.nodal_loads.items():
+                if not self.nodal_loads.get(node):
+                    self.nodal_loads[node] = NodalLoad()
 
-            for elem, thermal_load in load_case.element_thermal_loads.items():
-                # get global dofs
-                dofs = elem.global_dofs
-                # get member equivalent nodal loads
-                feg = thermal_load.get_equivalent_nodal_actions()
-                # assemble equivalent nodal loads to global force vector
-                self.f_global[dofs] += feg * factor
+                co_nodal_load = self.nodal_loads[node]
+                co_nodal_load.load_components += lc_nodal_load.load_components * factor
+
+            for node, lc_pd in load_case.prescribed_displacements.items():
+                if not self.prescribed_displacements.get(node):
+                    self.prescribed_displacements[node] = PrescribedDisplacement()
+
+                co_pd = self.prescribed_displacements[node]
+                co_pd.prescribed_displacements += lc_pd.prescribed_displacements * factor
+
+            for element, lc_edl in load_case.element_distributed_loads.items():
+                if not self.element_distributed_loads.get(element):
+                    self.element_distributed_loads[element] = DistributedLoad(element)
+
+                co_edl = self.element_distributed_loads[element]
+                co_edl.components_local += lc_edl.components_local * factor
+
+            for element, lc_etl in load_case.element_thermal_loads.items():
+                if not self.element_thermal_loads.get(element):
+                    self.element_thermal_loads[element] = ThermalLoad(element)
+
+                co_etl = self.element_thermal_loads[element]
+                co_etl.temperature_gradients += lc_etl.temperature_gradients * factor
 
 
 class EnvelopeCombination:
