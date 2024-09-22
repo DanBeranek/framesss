@@ -400,7 +400,7 @@ class Member1D:
         )
         self.thermal_loads.append(new_thermal_load)
 
-    def discretize(self, model: Model) -> None:
+    def discretize(self, model: Model, max_element_length: None | float = None) -> None:
         """
         Perform the discretization of the member based on its load discontinuities.
 
@@ -414,8 +414,18 @@ class Member1D:
         extending the model's global node and element lists.
 
         :param model: A reference to the :class:`Model` to which the member belongs.
+        :param max_element_length: The maximum length of the finite elements to be used
+                                   for discretization.
+                                   If set to `None`, members will be divided only
+                                   in discontinuities. Default is `None`.
         """
-        self.x_discontinuities = np.unique(self.x_discontinuities)
+        if max_element_length:
+            n_nodes = int(np.ceil(self.length / max_element_length)) + 1
+            x = np.linspace(0, self.length, n_nodes)
+            self.x_discontinuities = np.unique(np.append(self.x_discontinuities, x))
+        else:
+            self.x_discontinuities = np.unique(self.x_discontinuities)
+
         self.generate_nodes()
         self.generate_elements()
         self.assign_point_loads()

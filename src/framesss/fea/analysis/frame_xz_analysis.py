@@ -8,7 +8,7 @@ import scipy as sp  # type: ignore[import-untyped]
 from framesss.enums import AnalysisModelType
 from framesss.enums import DoF
 from framesss.fea.analysis.analysis import Analysis
-from framesss.pre.cases import EnvelopeCombination
+from framesss.pre.cases import EnvelopeCombination, NonlinearLoadCaseCombination
 from framesss.pre.cases import LoadCase
 from framesss.utils import assemble_subarray_at_indices
 
@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from framesss.fea.models.model import Model
     from framesss.fea.node import Node
     from framesss.pre.cases import LoadCaseCombination
+    from framesss.pre.cases import NonlinearLoadCaseCombination
     from framesss.pre.member_1d import Member1D
 
 
@@ -100,12 +101,19 @@ class FrameXZAnalysis(Analysis):
         return transformation_matrix  # type: ignore[no-any-return]
 
     def get_element_local_stiffness_matrix(
-        self, element: Element1D
+        self,
+        element: Element1D,
+        nonlinear_combination: NonlinearLoadCaseCombination | None = None,
+        modulus_type: str = "tangent",
     ) -> npt.NDArray[np.float64]:
         """
         Assembles and returns the local stiffness matrix for a specified element.
 
         :param element: A reference to an instance of the :class:`Element1D` class.
+        :param nonlinear_combination: A reference to an instance of the
+                                      :class:`NonlinearLoadCaseCombination` class.
+        :param modulus_type: The type of modulus to use for calculation.
+                             Can be either 'tangent' or 'secant'.
         :return: The local stiffness matrix of the specified element.
         """
         # Initialize member stiffness matrix in local system
@@ -121,7 +129,9 @@ class FrameXZAnalysis(Analysis):
         assemble_subarray_at_indices(kel, axial_coefficients, self.dof_elem_axial)
 
         # Compute flexural stiffness coefficients
-        flexural_coefficients = element.get_flexural_xz_stiffness_coefficients()
+        flexural_coefficients = element.get_flexural_xz_stiffness_coefficients(
+            nonlinear_combination=nonlinear_combination
+        )
         assemble_subarray_at_indices(
             kel, flexural_coefficients, self.dof_elem_flexural_xz
         )
@@ -154,6 +164,38 @@ class FrameXZAnalysis(Analysis):
             load_case.f_global[
                 model.dof_connectivity_matrix[1, node_idx]
             ] += load.load_components[4]
+
+    def assemble_nodal_loads_nonlinear_combination(
+        self,
+        model: Model,
+        combination: NonlinearLoadCaseCombination
+    ) -> None:
+        """
+        Assemble nodal load components to the global force vector for a given nonlinear load case combination.
+
+        This method iterates over all load cases and its nodal loads defined in a nonlinear combination and adds
+        their factored components to the global force vector.
+
+        :param model: A reference to an instance of the :class:`Model` class.
+        :param combination: A reference to an instance of the :class:`NonlinearLoadCaseCombination` class.
+        """
+        for load_case, factor in combination.load_cases.items():
+            for node, load in load_case.nodal_loads.items():
+                node_idx = node.id
+                # Add applied force in global X coordinate_system
+                combination.f_global[
+                    model.dof_connectivity_matrix[0, node_idx]
+                ] += load.load_components[0] * factor
+
+                # Add applied force in global Z coordinate_system
+                combination.f_global[
+                    model.dof_connectivity_matrix[2, node_idx]
+                ] += load.load_components[2] * factor
+
+                # Add applied moment about global Y coordinate_system
+                combination.f_global[
+                    model.dof_connectivity_matrix[1, node_idx]
+                ] += load.load_components[4] * factor
 
     def get_fixed_end_forces(self, load: ElementLoad) -> npt.NDArray[np.float64]:
         """
@@ -407,14 +449,19 @@ class FrameXZAnalysis(Analysis):
         :param member: A reference to an instance of the :class:`Member1D` class.
         :param envelope: A reference to an instance of the :class:`EnvelopeCombination`.
         """
+        zero_array = np.zeros(member.x_local.shape)
+
         axial_forces = np.vstack(
             [member.results.axial_forces[case] for case in envelope.cases]
+            + [zero_array]
         )
         shear_forces_z = np.vstack(
             [member.results.shear_forces_z[case] for case in envelope.cases]
+            + [zero_array]
         )
         bending_moments_y = np.vstack(
             [member.results.bending_moments_y[case] for case in envelope.cases]
+            + [zero_array]
         )
 
         member.results.axial_forces[envelope] = np.array(
@@ -491,6 +538,39 @@ class FrameXZAnalysis(Analysis):
                 factor * member.results.translations_z[load_case]
             )
 
+    def save_internal_displacements_on_member_envelope(
+        self, member: Member1D, envelope: EnvelopeCombination
+    ) -> None:
+        """
+        Compute and save the internal displacements for a member under a specified load case.
+
+        This method aggregates displacement data from each :class:`Element1D` of the :class:`Member1D`,
+
+        :param member: A reference to an instance of the :class:`Member1D` class.
+        :param envelope: A reference to an instance of the :class:`LoadCaseCombination` class.
+        """
+        trans_x = np.vstack(
+            [member.results.translations_x[case] for case in envelope.cases]
+        )
+
+        trans_z = np.vstack(
+            [member.results.translations_z[case] for case in envelope.cases]
+        )
+
+        member.results.translations_x[envelope] = np.array(
+            [
+                np.min(trans_x, axis=0),
+                np.max(trans_x, axis=0)
+            ]
+        )
+
+        member.results.translations_z[envelope] = np.array(
+            [
+                np.min(trans_z, axis=0),
+                np.max(trans_z, axis=0)
+            ]
+        )
+
     def save_reactions(self, node: Node, load_case: LoadCase) -> None:
         """
         Save the reaction forces and moments for a specified node under a given load case.
@@ -553,6 +633,53 @@ class FrameXZAnalysis(Analysis):
                 node.results.reaction_force_z[load_combination] += (
                     factor * load_case.f_global[node.global_dofs[2]]
                 )
+
+    def save_reactions_envelope(
+        self, node: Node, envelope: EnvelopeCombination
+    ) -> None:
+        """
+        Save the reaction forces and moments for a specified node for given Envelope.
+
+        This method extracts reaction forces and moments from the global force vector for the specified
+        :class:`LoadCase` and assigns them to the corresponding node results.
+
+        :param node: A reference to an instance of the :class:`Node` class.
+        :param envelope: A reference to an instance of the :class:`EnvelopeCombination`.
+        """
+        reactions_x = np.vstack(
+            [node.results.reaction_force_x.get(case, 0) for case in envelope.cases]
+        )
+        reactions_z = np.vstack(
+            [node.results.reaction_force_z.get(case, 0) for case in envelope.cases]
+        )
+        moments_y = np.vstack(
+            [node.results.reaction_moment_y.get(case, 0) for case in envelope.cases]
+        )
+
+        node.results.reaction_force_x[envelope] = np.array(
+            [np.min(reactions_x, axis=0), np.max(reactions_x, axis=0)]
+        )
+        node.results.reaction_force_z[envelope] = np.array(
+            [np.min(reactions_z, axis=0), np.max(reactions_z, axis=0)]
+        )
+        node.results.reaction_moment_y[envelope] = np.array(
+            [np.min(moments_y, axis=0), np.max(moments_y, axis=0)]
+        )
+
+    def save_curvatures_xz(self, element: Element1D, combination:NonlinearLoadCaseCombination) -> None:
+        u_start = combination.u_global[element.nodes[0].global_dofs]
+        u_end = combination.u_global[element.nodes[-1].global_dofs]
+
+        u = np.array([
+            [u_start[2]],
+            [u_start[1]],
+            [u_end[2]],
+            [u_end[1]]
+        ])
+
+        B = element.get_second_derivative_of_flexural_xz_displacement_shape_functions(x=element.length/2)
+
+        element.curvature_xz[combination] = float(B @ u)
 
     def save_displacements(self, node: Node, load_case: LoadCase) -> None:
         """

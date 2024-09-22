@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 if TYPE_CHECKING:
     from framesss.pre.material import Material
+    import numpy.typing as npt
 
 
 class Section:
@@ -20,6 +23,7 @@ class Section:
     :param height_y: Height relative to local y-axis.
     :param height_z: Height relative to local z-axis.
     :param material: The material of the section.
+    :param moment_curvature: The moment-curvature relation of the section.
     """
 
     def __init__(
@@ -34,6 +38,7 @@ class Section:
         height_y: float,
         height_z: float,
         material: Material,
+        moment_curvature: npt.NDArray[np.float64] | None = None,
     ) -> None:
         """Init the Section class."""
         self.label = label
@@ -46,6 +51,7 @@ class Section:
         self.height_y = height_y
         self.height_z = height_z
         self.material = material
+        self.moment_curvature = moment_curvature
 
     def __repr__(self) -> str:
         """Return a string representation of section."""
@@ -87,6 +93,50 @@ class Section:
     def EIz(self) -> float:
         """Return the bending stiffness about local z-axis."""
         return self.material.elastic_modulus * self.inertia_z
+
+    def EIy_moment_curvature(
+        self,
+        curvature: float,
+        modulus_type: str = 'tangent'
+    ) -> float:
+        """
+        Return the bending stiffness about local y-axis based on MC relation.
+
+        :param curvature: Curvature of the element.
+        :param modulus_type: Type of modulus to be returned. Can be 'secant' or 'tangent'.
+        """
+        if self.moment_curvature is None:
+            return self.EIy
+        else:
+            if modulus_type.lower() == 'secant':
+                return np.abs(
+                    np.interp(
+                        x=curvature,
+                        xp=self.moment_curvature[1, :],
+                        fp=self.moment_curvature[0, :]
+                    ) / curvature
+                )
+            if modulus_type.lower() == 'tangent':
+                idx = np.searchsorted(
+                    self.moment_curvature[1], curvature, side='left'
+                )
+                if idx == 0:
+                    raise ValueError('Curvature is less than minimum.')
+                if idx == len(self.moment_curvature[1]):
+                    raise ValueError('Curvature is more than maximum.')
+
+                lower_kappa = self.moment_curvature[1][idx-1]
+                upper_kappa = self.moment_curvature[1][idx]
+                lower_moment = self.moment_curvature[0][idx-1]
+                upper_moment = self.moment_curvature[0][idx]
+
+                d_kappa = upper_kappa - lower_kappa
+                d_moment = upper_moment - lower_moment
+
+                if d_kappa == 0:
+                    raise ValueError('Zero curvature interval; cannot compute derivative.')
+                return - d_moment / d_kappa
+            raise ValueError(f"Wrong attribute 'type': '{type}'. Choose from ['secant', 'tangent'].")
 
 
 class PolygonalSection(Section):

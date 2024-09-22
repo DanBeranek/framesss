@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     import numpy.typing as npt
 
     from framesss.fea.models.model import Model
-    from framesss.pre.cases import EnvelopeCombination
+    from framesss.pre.cases import EnvelopeCombination, NonlinearLoadCaseCombination
     from framesss.pre.cases import LoadCase
     from framesss.pre.cases import LoadCaseCombination
 
@@ -55,11 +55,15 @@ class Solver(ABC):
         """
         self.model.k_global = sp.sparse.coo_matrix((self.model.neq, self.model.neq))
 
-        for case in self.model.load_cases:
+        for case in self.model.load_cases.union(self.model.nonlinear_load_combinations):
             case.f_global = np.zeros(self.model.neq)
             case.u_global = np.zeros(self.model.neq)
 
-    def assemble_global_stiffness_matrix(self) -> None:
+    def assemble_global_stiffness_matrix(
+        self,
+        nonlinear_combination: NonlinearLoadCaseCombination | None = None,
+        modulus_type: str = "tangent",
+    ) -> None:
         """
         Assembles the global stiffness matrix for the entire model using the sparse COO format.
 
@@ -67,6 +71,10 @@ class Solver(ABC):
         its associated global degrees of freedom (DoFs). These matrices are then combined into a single global
         stiffness matrix. The sparse COO format is utilized to efficiently store and manage the non-zero values
         of the stiffness matrix.
+
+        :param nonlinear_combination: Reference to :class:`NonlinearLoadCaseCombination`.
+        :param modulus_type: The type of modulus to use for calculation.
+                             Can be either 'tangent' or 'secant'.
         """
         row: npt.NDArray[np.int64] = np.empty(0, dtype=np.int64)
         col: npt.NDArray[np.int64] = np.empty(0, dtype=np.int64)
@@ -76,7 +84,10 @@ class Solver(ABC):
             dofs = element.global_dofs
             n_dofs = len(dofs)
 
-            keg = element.get_element_global_stiffness_matrix()
+            keg = element.get_element_global_stiffness_matrix(
+                nonlinear_combination = nonlinear_combination,
+                modulus_type=modulus_type
+            )
 
             r = np.repeat(dofs, n_dofs)
             c = np.tile(dofs, n_dofs)
@@ -182,6 +193,25 @@ class Solver(ABC):
                 member, load_combination
             )
 
+    def save_member_internal_displacements_envelope(
+        self, envelope: EnvelopeCombination
+    ) -> None:
+        """
+        Save the displacements for each member in the model under a specified load case.
+
+        This method iterates over all members in the model and invokes a process to calculate and store
+        the displacements (translations and rotations) experienced by each member due to the applied loads
+        in the given load case. The calculation is performed by the `save_internal_displacements_on_member`
+        method of the analysis model, which takes into account both global and local effects to
+        accurately determine the stresses along each member.
+
+        :param envelope: A reference to an instance of the :class:`EnvelopeCombination` class.
+        """
+        for member in self.model.members:
+            self.model.analysis.save_internal_displacements_on_member_envelope(
+                member, envelope
+            )
+
     def save_reactions(self, load_case: LoadCase) -> None:
         """
         Save the reaction forces and moments for each node in the model under a specified load case.
@@ -206,6 +236,18 @@ class Solver(ABC):
         """
         for node in self.model.nodes:
             self.model.analysis.save_reactions_combination(node, load_combination)
+
+    def save_reactions_envelope(self, envelope: EnvelopeCombination) -> None:
+        """
+        Save the reaction forces and moments for each node in the model for specified envelope.
+
+        This method iterates over all nodes in the model, retrieving and storing the reaction forces
+        and moments resulting from the applied loads and constraints defined by the load case.
+
+        :param envelope: A reference to an instance of the :class:`EnvelopeCombination` class.
+        """
+        for node in self.model.nodes:
+            self.model.analysis.save_reactions_envelope(node, envelope)
 
     def save_displacements(self, load_case: LoadCase) -> None:
         """
@@ -237,7 +279,9 @@ class Solver(ABC):
     @abstractmethod
     def solve_load_case(self, load_case: LoadCase) -> None:
         """Solve the system of equilibrium equations for a specific load case."""
-        pass
+        raise NotImplementedError(
+            "The 'solve_load_case' method must be implemented in concrete subclasses."
+        )
 
     @abstractmethod
     def solve(self, verbose: bool) -> None:

@@ -114,6 +114,63 @@ class LoadCaseCombination:
         self.load_cases[load_case] = factor
 
 
+class NonlinearLoadCaseCombination(LoadCase):
+    """Represent a combination of load cases for nonlinear analysis."""
+    def __init__(self, label: str, load_cases: dict[LoadCase, float]) -> None:
+        """Init the NonlinearLoadCaseCombination class."""
+        super().__init__(label)
+        self.label = label
+        self.load_cases = load_cases
+
+        self.set_loads()
+
+    def __repr__(self):
+        """Return a string representation of NonlinearLoadCaseCombination object."""
+        return f"{self.__class__.__name__}({self.label})"
+
+    def add_load_case(self, load_case: LoadCase, factor: float) -> None:
+        """
+        Add load case to load combination.
+
+        :param load_case: A reference to an instance of the :class:`LoadCase` class.
+        :param factor: The factor for a given load case.
+        """
+        self.load_cases[load_case] = factor
+
+    def set_loads(self):
+        """
+        This method must be called after model.discretize() method.
+        """
+        for load_case, factor in self.load_cases.items():
+            for node, lc_nodal_load in load_case.nodal_loads.items():
+                if not self.nodal_loads.get(node):
+                    self.nodal_loads[node] = NodalLoad()
+
+                co_nodal_load = self.nodal_loads[node]
+                co_nodal_load.load_components += lc_nodal_load.load_components * factor
+
+            for node, lc_pd in load_case.prescribed_displacements.items():
+                if not self.prescribed_displacements.get(node):
+                    self.prescribed_displacements[node] = PrescribedDisplacement()
+
+                co_pd = self.prescribed_displacements[node]
+                co_pd.prescribed_displacements += lc_pd.prescribed_displacements * factor
+
+            for element, lc_edl in load_case.element_distributed_loads.items():
+                if not self.element_distributed_loads.get(element):
+                    self.element_distributed_loads[element] = DistributedLoad(element)
+
+                co_edl = self.element_distributed_loads[element]
+                co_edl.components_local += lc_edl.components_local * factor
+
+            for element, lc_etl in load_case.element_thermal_loads.items():
+                if not self.element_thermal_loads.get(element):
+                    self.element_thermal_loads[element] = ThermalLoad(element)
+
+                co_etl = self.element_thermal_loads[element]
+                co_etl.temperature_gradients += lc_etl.temperature_gradients * factor
+
+
 class EnvelopeCombination:
     """
     Represent an envelope of load cases and (or) load combinations.

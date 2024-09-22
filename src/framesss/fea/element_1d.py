@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     import numpy.typing as npt
 
     from framesss.fea.node import Node
-    from framesss.pre.cases import LoadCase
+    from framesss.pre.cases import LoadCase, NonlinearLoadCaseCombination
     from framesss.pre.cases import LoadCaseCombination
     from framesss.pre.member_1d import Member1D
 
@@ -124,6 +124,8 @@ class Element1D:
         )
         self.global_dofs: npt.NDArray[np.int64] = np.empty(0, dtype=np.int64)
 
+        self.curvature_xz: dict[NonlinearLoadCaseCombination, float] = {}
+
         self.end_axial_forces: dict[LoadCase, npt.NDArray[np.float64]] = {}
         self.end_shear_forces_y: dict[LoadCase, npt.NDArray[np.float64]] = {}
         self.end_shear_forces_z: dict[LoadCase, npt.NDArray[np.float64]] = {}
@@ -170,15 +172,26 @@ class Element1D:
             f"hinges={hinge_descriptions})"
         )
 
-    def get_element_global_stiffness_matrix(self) -> npt.NDArray[np.float64]:
+    def get_element_global_stiffness_matrix(
+        self,
+        nonlinear_combination: NonlinearLoadCaseCombination | None = None,
+        modulus_type: str = "tangent",
+    ) -> npt.NDArray[np.float64]:
         """
         Return element stiffness matrix in global system.
 
+        :param nonlinear_combination: Reference to :class:`NonlinearLoadCaseCombination`.
+        :param modulus_type: The type of modulus to use for the calculation.
+                             Can be either 'tangent' or 'secant'.
         :return: Element stiffness matrix in global system.
         """
         # Compute and store member stiffness matrix in local system
         self.stiffness_matrix_local = (
-            self.member.analysis.get_element_local_stiffness_matrix(self)
+            self.member.analysis.get_element_local_stiffness_matrix(
+                self,
+                nonlinear_combination=nonlinear_combination,
+                modulus_type=modulus_type
+            )
         )
 
         # Transform member stiffness matrix from local to global system
@@ -340,13 +353,28 @@ class Element1D:
 
         return kef
 
-    def get_flexural_xz_stiffness_coefficients(self) -> npt.NDArray[np.float64]:
+    def get_flexural_xz_stiffness_coefficients(
+        self,
+        nonlinear_combination: NonlinearLoadCaseCombination | None = None,
+        modulus_type: str = "tangent",
+    ) -> npt.NDArray[np.float64]:
         """
         Return flexural stiffness coefficient matrix in local xz-plane.
 
+        :param nonlinear_combination: A reference to an instance of the
+                                      :class:`NonlinearLoadCaseCombination` class.
+        :param modulus_type: The type of modulus to use for the calculation.
+                             Can be either 'tangent' or 'secant'.
         :return kef: A 4x4 matrix with flexural stiffness coefficients.
         """
-        EI = self.member.section.EIy
+        if nonlinear_combination:
+            EI = self.member.section.EIy_moment_curvature(
+                curvature=self.curvature_xz[nonlinear_combination],
+                modulus_type=modulus_type
+            )
+        else:
+            EI = self.member.section.EIy
+
         L = self.length
 
         if self.member.element_type == Element1DType.NAVIER:
@@ -658,6 +686,101 @@ class Element1D:
             )
 
         return np.array([Nw1, Nw2, Nw3, Nw4])
+
+    def get_second_derivative_of_flexural_xz_displacement_shape_functions(
+        self, x: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
+        """
+        Return the second derivative of flexural displacement shape functions
+        in local xz-plane at a given position(s).
+
+        The second derivative of flexural shape functions are used to interpolate
+        the curvature of an element.
+
+        :param x: The position(s) along the element's local x-axis.
+        :return: A 4x*n* vector with the evaluated flexural displacement
+                 shape functions in local xz-plane at the specified position(s).
+        """
+        npoints = x.size
+
+        L = self.length
+        L2 = L * L
+        L3 = L2 * L
+
+        if self.member.element_type == Element1DType.NAVIER:
+            Omega = 0.0
+        elif self.member.element_type == Element1DType.TIMOSHENKO:
+            EI = self.member.section.EIy
+            GA = self.member.section.GAz
+
+            Omega = EI / (GA * L * L)
+        else:
+            raise ValueError(f"Unknown member type: {self.member.element_type}.")
+
+        lamb = 1 + 3 * Omega
+        mu = 1 + 12 * Omega
+        gamma = 1 - 6 * Omega
+
+        if (self.hinge_start == BeamConnection.CONTINUOUS_END) and (
+            self.hinge_end == BeamConnection.CONTINUOUS_END
+        ):
+            Bw1 = (
+                - 6 / (L2 * mu)
+                + 12 * x / (L3 * mu)
+            )
+            Bw2 = (
+                4 * lamb / (L * mu)
+                - 6 * x / (L2 * mu)
+            )
+            Bw3 = (
+                6 / (L2 * mu)
+                - 12 * x / (L3 * mu)
+            )
+            Bw4 = (
+                2 * gamma / (L * mu)
+                - 6 * x / (L2 * mu)
+            )
+
+        elif (self.hinge_start == BeamConnection.HINGED_END) and (
+            self.hinge_end == BeamConnection.CONTINUOUS_END
+        ):
+            Bw1 = 3 * x / (L3 * lamb)
+            Bw2 = np.zeros(npoints)
+            Bw3 = - 3 * x / (L3 * lamb)
+            Bw4 = - 3 * x / (L2 * lamb)
+
+        elif (self.hinge_start == BeamConnection.CONTINUOUS_END) and (
+            self.hinge_end == BeamConnection.HINGED_END
+        ):
+            Bw1 = (
+                - 3 / (L2 * lamb)
+                + 3 * x / (L3 * lamb)
+            )
+            Bw2 = (
+                + 3 / (L * lamb)
+                - 3 * x / (L2 * lamb)
+            )
+            Bw3 = (
+                + 3 / (L2 * lamb)
+                - 3 * x / (L3 * lamb)
+            )
+            Bw4 = np.zeros(npoints)
+
+        elif (self.hinge_start == BeamConnection.HINGED_END) and (
+            self.hinge_end == BeamConnection.HINGED_END
+        ):
+            Bw1 = np.zeros(npoints)
+            Bw2 = np.zeros(npoints)
+            Bw3 = np.zeros(npoints)
+            Bw4 = np.zeros(npoints)
+
+        else:
+            raise ValueError(
+                f"Unknown continuity condition at the start or end "
+                f"of the member: {self.hinge_start}, {self.hinge_end}."
+            )
+
+        return np.array([Bw1, Bw2, Bw3, Bw4])
 
     def get_element_local_displacements(
         self, load_case: LoadCase

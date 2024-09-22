@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from framesss.pre.cases import EnvelopeCombination
     from framesss.pre.cases import LoadCase
     from framesss.pre.cases import LoadCaseCombination
+    from framesss.pre.cases import NonlinearLoadCaseCombination
     from framesss.pre.member_1d import Member1D
 
 
@@ -120,12 +121,16 @@ class Analysis(ABC):
 
     @abstractmethod
     def get_element_local_stiffness_matrix(
-        self, element: Element1D
+        self,
+        element: Element1D,
+        nonlinear_combination: NonlinearLoadCaseCombination | None = None
     ) -> npt.NDArray[np.float64]:
         """
         Assembles and returns the local stiffness matrix for a specified element.
 
         :param element: A reference to an instance of the :class:`Element1D` class.
+        :param nonlinear_combination: A reference to an instance of the
+                                      :class:`NonlinearLoadCaseCombination` class.
         :return: The local stiffness matrix of the specified element.
         """
         pass
@@ -140,6 +145,23 @@ class Analysis(ABC):
 
         :param model: A reference to an instance of the :class:`Model` class.
         :param load_case: A reference to an instance of the :class:`LoadCase` class.
+        """
+        pass
+
+    @abstractmethod
+    def assemble_nodal_loads_nonlinear_combination(
+        self,
+        model: Model,
+        combination: NonlinearLoadCaseCombination
+    ) -> None:
+        """
+        Assemble nodal load components to the global force vector for a given nonlinear load case combination.
+
+        This method iterates over all load cases and its nodal loads defined in a nonlinear combination and adds
+        their factored components to the global force vector.
+
+        :param model: A reference to an instance of the :class:`Model` class.
+        :param combination: A reference to an instance of the :class:`NonlinearLoadCaseCombination` class.
         """
         pass
 
@@ -265,6 +287,20 @@ class Analysis(ABC):
         pass
 
     @abstractmethod
+    def save_internal_displacements_on_member_envelope(
+        self, member: Member1D, envelope: EnvelopeCombination
+    ) -> None:
+        """
+        Compute and save the internal displacements for a member under a specified load case.
+
+        This method aggregates displacement data from each :class:`Element1D` of the :class:`Member1D`,
+
+        :param member: A reference to an instance of the :class:`Member1D` class.
+        :param envelope: A reference to an instance of the :class:`LoadCaseCombination` class.
+        """
+        pass
+
+    @abstractmethod
     def save_reactions(self, node: Node, load_case: LoadCase) -> None:
         """
         Save the reaction forces and moments for a specified node under a given load case.
@@ -301,6 +337,18 @@ class Analysis(ABC):
         direction is not `SupportFixity.FIXED_DOF` (i.e. reaction storage for a particular direction
         is None), this method will not attempt to save reactions in that direction.
         """
+        pass
+
+    @abstractmethod
+    def save_reactions_envelope(
+        self, node: Node, envelope: EnvelopeCombination
+    ) -> None:
+        pass
+
+    @abstractmethod
+    def save_curvatures_xz(
+        self, element: Element1D, combination:NonlinearLoadCaseCombination
+    ) -> None:
         pass
 
     @abstractmethod
