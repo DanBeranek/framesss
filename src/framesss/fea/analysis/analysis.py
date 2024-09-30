@@ -123,7 +123,8 @@ class Analysis(ABC):
     def get_element_local_stiffness_matrix(
         self,
         element: Element1D,
-        nonlinear_combination: NonlinearLoadCaseCombination | None = None
+        nonlinear_combination: NonlinearLoadCaseCombination | None = None,
+        modulus_type: str = "tangent"
     ) -> npt.NDArray[np.float64]:
         """
         Assembles and returns the local stiffness matrix for a specified element.
@@ -131,6 +132,8 @@ class Analysis(ABC):
         :param element: A reference to an instance of the :class:`Element1D` class.
         :param nonlinear_combination: A reference to an instance of the
                                       :class:`NonlinearLoadCaseCombination` class.
+        :param modulus_type: The type of modulus to use for calculation.
+                             Can be either 'tangent' or 'secant'.
         :return: The local stiffness matrix of the specified element.
         """
         pass
