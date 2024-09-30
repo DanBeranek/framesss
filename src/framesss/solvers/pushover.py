@@ -27,7 +27,7 @@ class PushoverSolver(Solver):
         self,
         combination: NonlinearLoadCaseCombination,
         n_time_steps: int = 20,
-        modulus_type: str = "tangent"
+        modulus_type: str = "tangent",
     ) -> None:
         """
         Solve the system of equilibrium equations for a specific load case.
@@ -45,41 +45,44 @@ class PushoverSolver(Solver):
         # store global force vector
         f_global = copy(combination.f_global)
 
-        print(f'Solving combination {combination}')
+        # print(f'Solving combination {combination}')
 
-        for i, coefficient in enumerate(np.linspace(0, 1, n_time_steps+1)[1:]):
-            print(f'Load step {i+1}')
-            print(f'{coefficient=}')
+        for i, coefficient in enumerate(np.linspace(0, 1, n_time_steps + 1)[1:]):
+            # print(f'Load step {i+1}')
+            # print(f'{coefficient=}')
             if i == 0:
                 self.assemble_global_stiffness_matrix()
             else:
                 self.assemble_global_stiffness_matrix(
-                    nonlinear_combination=combination,
-                    modulus_type=modulus_type
+                    nonlinear_combination=combination, modulus_type=modulus_type
                 )
 
             k_global = sp.sparse.lil_matrix(self.model.k_global)
 
             # Assemble free-free global matrix
-            k_ff = k_global[: (neq_free + neq_spring), : (neq_free + neq_spring)].tocsr()
+            k_ff = k_global[
+                : (neq_free + neq_spring), : (neq_free + neq_spring)
+            ].tocsr()
 
             # Check for stable k_ff global matrix by verifying its determinant (a very low
             # determinant indicates that the matrix is badly conditioned and may be singular)
             if not is_invertible(k_ff.todense()):
                 raise SingularMatrixError(
                     f"Singular stiffness matrix. Determinant: {np.linalg.det(k_ff.todense())}",
-                    matrix=k_ff
+                    matrix=k_ff,
                 )
 
             # Partition system of equations
-            k_fc = k_global[: (neq_free + neq_spring), (neq_free + neq_spring): neq]
-            k_cf = k_global[(neq_free + neq_spring): neq, : (neq_free + neq_spring)]
-            k_cc = k_global[(neq_free + neq_spring): neq, (neq_free + neq_spring): neq]
+            k_fc = k_global[: (neq_free + neq_spring), (neq_free + neq_spring) : neq]
+            k_cf = k_global[(neq_free + neq_spring) : neq, : (neq_free + neq_spring)]
+            k_cc = k_global[
+                (neq_free + neq_spring) : neq, (neq_free + neq_spring) : neq
+            ]
 
             f_f = f_global[: (neq_free + neq_spring)] * coefficient
-            f_c = f_global[(neq_free + neq_spring):] * coefficient
+            f_c = f_global[(neq_free + neq_spring) :] * coefficient
 
-            u_c = combination.u_global[(neq_free + neq_spring):]
+            u_c = combination.u_global[(neq_free + neq_spring) :]
 
             u_f = sp.sparse.linalg.spsolve(k_ff, f_f - k_fc @ u_c)
 
@@ -94,10 +97,11 @@ class PushoverSolver(Solver):
 
             for i in range(self.model.neq_spring):
                 f_s[i] = (
-                    -self.model.spring_stiffness_global[i] * u_f[self.model.neq_free + i]
+                    -self.model.spring_stiffness_global[i]
+                    * u_f[self.model.neq_free + i]
                 )
 
-            f_f[self.model.neq_free: self.model.neq_free + self.model.neq_spring] = f_s
+            f_f[self.model.neq_free : self.model.neq_free + self.model.neq_spring] = f_s
 
             # Reconstruct the global force vector f_global and the global displacement vector u_global
             combination.u_global = np.concatenate([u_f, u_c])
@@ -105,8 +109,7 @@ class PushoverSolver(Solver):
 
             for element in self.model.elements:
                 self.model.analysis.save_curvatures_xz(
-                    element=element,
-                    combination=combination
+                    element=element, combination=combination
                 )
 
         print(f"{combination.label} solved")
@@ -166,7 +169,9 @@ class PushoverSolver(Solver):
                     f"{i*7 + steps_init + 2}/{n_steps}"
                     f" : Applying nodal forces for nonlinear combination: '{case.label}'..."
                 )
-            self.model.analysis.assemble_nodal_loads_nonlinear_combination(self.model, case)
+            self.model.analysis.assemble_nodal_loads_nonlinear_combination(
+                self.model, case
+            )
 
             if verbose:
                 print(
@@ -207,18 +212,15 @@ class PushoverSolver(Solver):
 
             case.is_solved = True
 
+        for i, envelope in enumerate(self.model.envelopes):
+            if verbose:
+                print(
+                    f"{i*1 + steps_init + steps_cases + steps_combs + 1}/{n_steps}"
+                    f" : Computing internal forces for envelope: {envelope.label}..."
+                )
+            self.save_envelope_internal_forces(envelope)
+            self.save_member_internal_displacements_envelope(envelope)
+            self.save_reactions_envelope(envelope)
 
-
-        # for i, envelope in enumerate(self.model.envelopes):
-        #     if verbose:
-        #         print(
-        #             f"{i*1 + steps_init + steps_cases + steps_combs + 1}/{n_steps}"
-        #             f" : Computing internal forces for envelope: {envelope.label}..."
-        #         )
-        #     self.save_envelope_internal_forces(envelope)
-        #     self.save_member_internal_displacements_envelope(envelope)
-        #     self.save_reactions_envelope(envelope)
-        #
-        # if verbose:
-        #     print(f"{n_steps}/{n_steps} : Analysis successfully finished.")
-
+        if verbose:
+            print(f"{n_steps}/{n_steps} : Analysis successfully finished.")

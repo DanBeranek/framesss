@@ -123,7 +123,8 @@ class Analysis(ABC):
     def get_element_local_stiffness_matrix(
         self,
         element: Element1D,
-        nonlinear_combination: NonlinearLoadCaseCombination | None = None
+        nonlinear_combination: NonlinearLoadCaseCombination | None = None,
+        modulus_type: str = "tangent",
     ) -> npt.NDArray[np.float64]:
         """
         Assembles and returns the local stiffness matrix for a specified element.
@@ -131,6 +132,8 @@ class Analysis(ABC):
         :param element: A reference to an instance of the :class:`Element1D` class.
         :param nonlinear_combination: A reference to an instance of the
                                       :class:`NonlinearLoadCaseCombination` class.
+        :param modulus_type: The type of modulus to use for calculation.
+                             Can be either 'tangent' or 'secant'.
         :return: The local stiffness matrix of the specified element.
         """
         pass
@@ -150,9 +153,7 @@ class Analysis(ABC):
 
     @abstractmethod
     def assemble_nodal_loads_nonlinear_combination(
-        self,
-        model: Model,
-        combination: NonlinearLoadCaseCombination
+        self, model: Model, combination: NonlinearLoadCaseCombination
     ) -> None:
         """
         Assemble nodal load components to the global force vector for a given nonlinear load case combination.
@@ -347,7 +348,7 @@ class Analysis(ABC):
 
     @abstractmethod
     def save_curvatures_xz(
-        self, element: Element1D, combination:NonlinearLoadCaseCombination
+        self, element: Element1D, combination: NonlinearLoadCaseCombination
     ) -> None:
         pass
 

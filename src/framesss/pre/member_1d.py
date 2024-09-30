@@ -93,7 +93,8 @@ class Member1D:
         self.label = label
         self.element_type = Element1DType(element_type)
         self.analysis = analysis
-        self.section = section
+        self.section: Section | None = section
+        self.sections: dict[tuple[float, float], Section] | None = None
         self.nodes = nodes
         self.hinge_start, self.hinge_end = (BeamConnection(hng) for hng in hinges)
         self.auxiliary_vector_xy_plane = auxiliary_vector_xy_plane
@@ -192,6 +193,35 @@ class Member1D:
         y = cross(z, x)
 
         return np.array([x, y, z])
+
+    def define_sections(self, sections: dict[tuple[float, float], Section]) -> None:
+        """
+        Define sections along the member's length.
+
+        This method allows the user to define multiple sections along the member's length,
+        each with its own properties. The sections are defined by specifying the start and end
+        positions along the member's length where the section applies, as well as the
+        :class:`Section` object that defines the properties of the section.
+
+        :param sections: A dictionary mapping tuples of start and end positions to :class:`Section` objects.
+        """
+        # Validate that the sections cover the entire member length
+        if not np.isclose(list(sections.keys())[0][0], 0.0):
+            raise ValueError("The first section must start at position 0.0")
+        if not np.isclose(list(sections.keys())[-1][1], self.length):
+            raise ValueError("The last section must end at the member's length")
+
+        # Assign the sections to the member
+        self.sections = sections
+        self.section = None
+
+        # Add x values to x discontinuities
+        for start, end in sections.keys():
+            self.x_discontinuities = np.append(self.x_discontinuities, start)
+            self.x_discontinuities = np.append(self.x_discontinuities, end)
+
+        # Sort the discontinuities
+        self.x_discontinuities = np.unique(self.x_discontinuities)
 
     def add_node(
         self,
@@ -488,7 +518,27 @@ class Member1D:
             if i == len(self.x_discontinuities) - 2:
                 hng[1] = self.hinge_end
 
-            new_element = Element1D(self, [node_1, node_2], x_1, x_2, hng)
+            section = self.section
+
+            if self.sections:
+                for (start, end), sec in self.sections.items():
+                    if start <= x_1 < x_2 <= end:
+                        section = sec
+                        break
+                else:
+                    # Section was not found
+                    raise ValueError(
+                        f"Interval [{x_1, x_2}] does not belong to any section."
+                    )
+
+            new_element = Element1D(
+                member=self,
+                nodes=[node_1, node_2],
+                section=section,
+                x_start=x_1,
+                x_end=x_2,
+                hinges=hng,
+            )
             self.generated_elements.append(new_element)
 
     def assign_point_loads(self) -> None:

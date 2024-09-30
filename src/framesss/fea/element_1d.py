@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from framesss.pre.cases import LoadCase, NonlinearLoadCaseCombination
     from framesss.pre.cases import LoadCaseCombination
     from framesss.pre.member_1d import Member1D
+    from framesss.pre.section import Section
 
 MAX_DISTANCE_BETWEEN_SAMPLING_POINTS = 0.25  # (m)
 NUMERIC_GARBAGE = 1.0e-12
@@ -44,6 +45,7 @@ class Element1D:
 
     :ivar member: The parent member this element is part of.
     :ivar nodes: The nodes at the ends of the element.
+    :ivar section: Section of the element.
     :ivar x_start: The local x coordinate of the element's start node along the parent member's length.
     :ivar x_end: The local x coordinate of the element's end node along the parent member's length.
     :ivar hinge_start, hinge_end: Specifies the type of connections at the start and end of the element
@@ -70,6 +72,7 @@ class Element1D:
         self,
         member: Member1D,
         nodes: list[Node],
+        section: Section,
         x_start: float,
         x_end: float,
         hinges: list[BeamConnection],
@@ -87,6 +90,8 @@ class Element1D:
         self.length = x_end - x_start
 
         self.nodes = nodes
+
+        self.section = section
 
         # TODO: Move this to separate method
         # Get nodal coordinates
@@ -190,7 +195,7 @@ class Element1D:
             self.member.analysis.get_element_local_stiffness_matrix(
                 self,
                 nonlinear_combination=nonlinear_combination,
-                modulus_type=modulus_type
+                modulus_type=modulus_type,
             )
         )
 
@@ -231,7 +236,7 @@ class Element1D:
 
         :return kea: A 2x2 matrix with axial stiffness coefficients.
         """
-        EA = self.member.section.EA
+        EA = self.section.EA
         L = self.length
 
         k11 = EA / L
@@ -246,7 +251,7 @@ class Element1D:
 
         :return ket: A 2x2 matrix with torsion stiffness coefficients.
         """
-        GJ = self.member.section.GJt
+        GJ = self.section.GJt
         L = self.length
 
         if (self.hinge_start == BeamConnection.CONTINUOUS_END) and (
@@ -267,13 +272,13 @@ class Element1D:
 
         :return kef: A 4x4 matrix with flexural stiffness coefficients.
         """
-        EI = self.member.section.EIz
+        EI = self.section.EIz
         L = self.length
 
         if self.member.element_type == Element1DType.NAVIER:
             Omega = 0.0
         elif self.member.element_type == Element1DType.TIMOSHENKO:
-            GA = self.member.section.GAy
+            GA = self.section.GAy
 
             Omega = EI / (GA * L * L)
         else:
@@ -368,19 +373,19 @@ class Element1D:
         :return kef: A 4x4 matrix with flexural stiffness coefficients.
         """
         if nonlinear_combination:
-            EI = self.member.section.EIy_moment_curvature(
+            EI = self.section.EIy_moment_curvature(
                 curvature=self.curvature_xz[nonlinear_combination],
-                modulus_type=modulus_type
+                modulus_type=modulus_type,
             )
         else:
-            EI = self.member.section.EIy
+            EI = self.section.EIy
 
         L = self.length
 
         if self.member.element_type == Element1DType.NAVIER:
             Omega = 0.0
         elif self.member.element_type == Element1DType.TIMOSHENKO:
-            GA = self.member.section.GAz
+            GA = self.section.GAz
 
             Omega = EI / (GA * L * L)
         else:
@@ -499,8 +504,8 @@ class Element1D:
         if self.member.element_type == Element1DType.NAVIER:
             Omega = 0.0
         elif self.member.element_type == Element1DType.TIMOSHENKO:
-            EI = self.member.section.EIz
-            GA = self.member.section.GAy
+            EI = self.section.EIz
+            GA = self.section.GAy
 
             Omega = EI / (GA * L * L)
         else:
@@ -604,8 +609,8 @@ class Element1D:
         if self.member.element_type == Element1DType.NAVIER:
             Omega = 0.0
         elif self.member.element_type == Element1DType.TIMOSHENKO:
-            EI = self.member.section.EIy
-            GA = self.member.section.GAz
+            EI = self.section.EIy
+            GA = self.section.GAz
 
             Omega = EI / (GA * L * L)
         else:
@@ -710,8 +715,8 @@ class Element1D:
         if self.member.element_type == Element1DType.NAVIER:
             Omega = 0.0
         elif self.member.element_type == Element1DType.TIMOSHENKO:
-            EI = self.member.section.EIy
-            GA = self.member.section.GAz
+            EI = self.section.EIy
+            GA = self.section.GAz
 
             Omega = EI / (GA * L * L)
         else:
@@ -724,46 +729,25 @@ class Element1D:
         if (self.hinge_start == BeamConnection.CONTINUOUS_END) and (
             self.hinge_end == BeamConnection.CONTINUOUS_END
         ):
-            Bw1 = (
-                - 6 / (L2 * mu)
-                + 12 * x / (L3 * mu)
-            )
-            Bw2 = (
-                4 * lamb / (L * mu)
-                - 6 * x / (L2 * mu)
-            )
-            Bw3 = (
-                6 / (L2 * mu)
-                - 12 * x / (L3 * mu)
-            )
-            Bw4 = (
-                2 * gamma / (L * mu)
-                - 6 * x / (L2 * mu)
-            )
+            Bw1 = -6 / (L2 * mu) + 12 * x / (L3 * mu)
+            Bw2 = 4 * lamb / (L * mu) - 6 * x / (L2 * mu)
+            Bw3 = 6 / (L2 * mu) - 12 * x / (L3 * mu)
+            Bw4 = 2 * gamma / (L * mu) - 6 * x / (L2 * mu)
 
         elif (self.hinge_start == BeamConnection.HINGED_END) and (
             self.hinge_end == BeamConnection.CONTINUOUS_END
         ):
             Bw1 = 3 * x / (L3 * lamb)
             Bw2 = np.zeros(npoints)
-            Bw3 = - 3 * x / (L3 * lamb)
-            Bw4 = - 3 * x / (L2 * lamb)
+            Bw3 = -3 * x / (L3 * lamb)
+            Bw4 = -3 * x / (L2 * lamb)
 
         elif (self.hinge_start == BeamConnection.CONTINUOUS_END) and (
             self.hinge_end == BeamConnection.HINGED_END
         ):
-            Bw1 = (
-                - 3 / (L2 * lamb)
-                + 3 * x / (L3 * lamb)
-            )
-            Bw2 = (
-                + 3 / (L * lamb)
-                - 3 * x / (L2 * lamb)
-            )
-            Bw3 = (
-                + 3 / (L2 * lamb)
-                - 3 * x / (L3 * lamb)
-            )
+            Bw1 = -3 / (L2 * lamb) + 3 * x / (L3 * lamb)
+            Bw2 = +3 / (L * lamb) - 3 * x / (L2 * lamb)
+            Bw3 = +3 / (L2 * lamb) - 3 * x / (L3 * lamb)
             Bw4 = np.zeros(npoints)
 
         elif (self.hinge_start == BeamConnection.HINGED_END) and (

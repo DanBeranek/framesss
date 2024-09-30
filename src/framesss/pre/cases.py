@@ -116,6 +116,7 @@ class LoadCaseCombination:
 
 class NonlinearLoadCaseCombination(LoadCase):
     """Represent a combination of load cases for nonlinear analysis."""
+
     def __init__(self, label: str, load_cases: dict[LoadCase, float]) -> None:
         """Init the NonlinearLoadCaseCombination class."""
         super().__init__(label)
@@ -124,7 +125,7 @@ class NonlinearLoadCaseCombination(LoadCase):
 
         self.set_loads()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a string representation of NonlinearLoadCaseCombination object."""
         return f"{self.__class__.__name__}({self.label})"
 
@@ -137,7 +138,7 @@ class NonlinearLoadCaseCombination(LoadCase):
         """
         self.load_cases[load_case] = factor
 
-    def set_loads(self):
+    def set_loads(self) -> None:
         """
         This method must be called after model.discretize() method.
         """
@@ -154,7 +155,9 @@ class NonlinearLoadCaseCombination(LoadCase):
                     self.prescribed_displacements[node] = PrescribedDisplacement()
 
                 co_pd = self.prescribed_displacements[node]
-                co_pd.prescribed_displacements += lc_pd.prescribed_displacements * factor
+                co_pd.prescribed_displacements += (
+                    lc_pd.prescribed_displacements * factor
+                )
 
             for element, lc_edl in load_case.element_distributed_loads.items():
                 if not self.element_distributed_loads.get(element):
@@ -181,7 +184,11 @@ class EnvelopeCombination:
     :ivar cases: A list of :class:`LoadCase` and :class:`LoadCombination`.
     """
 
-    def __init__(self, label: str, cases: list[LoadCase | LoadCaseCombination]) -> None:
+    def __init__(
+        self,
+        label: str,
+        cases: list[LoadCase | LoadCaseCombination | NonlinearLoadCaseCombination],
+    ) -> None:
         """Init the LoadCaseCombination class."""
         self.label = label
         self.cases = cases
@@ -190,7 +197,9 @@ class EnvelopeCombination:
         """Return a string representation of EnvelopeCombination object."""
         return f"{self.__class__.__name__}({self.label})"
 
-    def add_case(self, case: LoadCase | LoadCaseCombination) -> None:
+    def add_case(
+        self, case: LoadCase | LoadCaseCombination | NonlinearLoadCaseCombination
+    ) -> None:
         """
         Add load case or load combination to load combination.
 
