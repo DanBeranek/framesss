@@ -17,15 +17,18 @@ def test_singular_stiffness_matrix() -> None:
     node_1 = model.add_node(
         "N1", [0.0, 0.0, 0.0], ["fixed", "free", "fixed", "free", "free", "free"]
     )
-    node_2 = model.add_node(
-        "N2", [5.0, 0.0, 0.0]
-    )
+    node_2 = model.add_node("N2", [5.0, 0.0, 0.0])
     node_3 = model.add_node(
         "N3", [10.0, 0.0, 0.0], ["fixed", "free", "fixed", "free", "free", "free"]
     )
 
-    member_1 = model.add_member("M1", "navier", [node_1, node_2], DUMMY_SEC,
-                                hinges=[BeamConnection.CONTINUOUS_END, BeamConnection.HINGED_END])
+    member_1 = model.add_member(
+        "M1",
+        "navier",
+        [node_1, node_2],
+        DUMMY_SEC,
+        hinges=[BeamConnection.CONTINUOUS_END, BeamConnection.HINGED_END],
+    )
     member_2 = model.add_member("M2", "navier", [node_2, node_3], DUMMY_SEC)
 
     load_case = model.add_load_case("LC1")

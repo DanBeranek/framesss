@@ -59,7 +59,7 @@ class LinearStaticSolver(Solver):
         if not is_invertible(k_ff.todense()):
             raise SingularMatrixError(
                 f"Singular stiffness matrix. Determinant: {np.linalg.det(k_ff.todense())}",
-                matrix=k_ff
+                matrix=k_ff,
             )
 
         # Partition system of equations

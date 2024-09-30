@@ -85,8 +85,7 @@ class Solver(ABC):
             n_dofs = len(dofs)
 
             keg = element.get_element_global_stiffness_matrix(
-                nonlinear_combination = nonlinear_combination,
-                modulus_type=modulus_type
+                nonlinear_combination=nonlinear_combination, modulus_type=modulus_type
             )
 
             r = np.repeat(dofs, n_dofs)

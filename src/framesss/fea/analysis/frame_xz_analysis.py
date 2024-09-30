@@ -166,9 +166,7 @@ class FrameXZAnalysis(Analysis):
             ] += load.load_components[4]
 
     def assemble_nodal_loads_nonlinear_combination(
-        self,
-        model: Model,
-        combination: NonlinearLoadCaseCombination
+        self, model: Model, combination: NonlinearLoadCaseCombination
     ) -> None:
         """
         Assemble nodal load components to the global force vector for a given nonlinear load case combination.
@@ -183,19 +181,19 @@ class FrameXZAnalysis(Analysis):
             for node, load in load_case.nodal_loads.items():
                 node_idx = node.id
                 # Add applied force in global X coordinate_system
-                combination.f_global[
-                    model.dof_connectivity_matrix[0, node_idx]
-                ] += load.load_components[0] * factor
+                combination.f_global[model.dof_connectivity_matrix[0, node_idx]] += (
+                    load.load_components[0] * factor
+                )
 
                 # Add applied force in global Z coordinate_system
-                combination.f_global[
-                    model.dof_connectivity_matrix[2, node_idx]
-                ] += load.load_components[2] * factor
+                combination.f_global[model.dof_connectivity_matrix[2, node_idx]] += (
+                    load.load_components[2] * factor
+                )
 
                 # Add applied moment about global Y coordinate_system
-                combination.f_global[
-                    model.dof_connectivity_matrix[1, node_idx]
-                ] += load.load_components[4] * factor
+                combination.f_global[model.dof_connectivity_matrix[1, node_idx]] += (
+                    load.load_components[4] * factor
+                )
 
     def get_fixed_end_forces(self, load: ElementLoad) -> npt.NDArray[np.float64]:
         """
@@ -558,17 +556,11 @@ class FrameXZAnalysis(Analysis):
         )
 
         member.results.translations_x[envelope] = np.array(
-            [
-                np.min(trans_x, axis=0),
-                np.max(trans_x, axis=0)
-            ]
+            [np.min(trans_x, axis=0), np.max(trans_x, axis=0)]
         )
 
         member.results.translations_z[envelope] = np.array(
-            [
-                np.min(trans_z, axis=0),
-                np.max(trans_z, axis=0)
-            ]
+            [np.min(trans_z, axis=0), np.max(trans_z, axis=0)]
         )
 
     def save_reactions(self, node: Node, load_case: LoadCase) -> None:
@@ -666,18 +658,17 @@ class FrameXZAnalysis(Analysis):
             [np.min(moments_y, axis=0), np.max(moments_y, axis=0)]
         )
 
-    def save_curvatures_xz(self, element: Element1D, combination:NonlinearLoadCaseCombination) -> None:
+    def save_curvatures_xz(
+        self, element: Element1D, combination: NonlinearLoadCaseCombination
+    ) -> None:
         u_start = combination.u_global[element.nodes[0].global_dofs]
         u_end = combination.u_global[element.nodes[-1].global_dofs]
 
-        u = np.array([
-            [u_start[2]],
-            [u_start[1]],
-            [u_end[2]],
-            [u_end[1]]
-        ])
+        u = np.array([[u_start[2]], [u_start[1]], [u_end[2]], [u_end[1]]])
 
-        B = element.get_second_derivative_of_flexural_xz_displacement_shape_functions(x=element.length/2)
+        B = element.get_second_derivative_of_flexural_xz_displacement_shape_functions(
+            x=element.length / 2
+        )
 
         element.curvature_xz[combination] = float(B @ u)
 

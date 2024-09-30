@@ -14,22 +14,22 @@ DUMMY_MAT = Material(
     elastic_modulus=30e9,
     poissons_ratio=0.2,
     thermal_expansion_coefficient=10e-7,
-    density=2300)
+    density=2300,
+)
 DUMMY_SEC = Section(
     label="bar",
     area_x=0.18,
     area_y=0.18,
     area_z=0.18,
     inertia_x=6.75e-3,
-    inertia_y=31_250_000/30e9,
+    inertia_y=31_250_000 / 30e9,
     inertia_z=1.35e-3,
     height_y=0.3,
     height_z=0.6,
     material=DUMMY_MAT,
-    moment_curvature=np.array([
-        [300e3, 250e3, -250e3, -300e3],
-        [-0.06, -0.008, 0.008, 0.06]
-    ])
+    moment_curvature=np.array(
+        [[300e3, 250e3, -250e3, -300e3], [-0.06, -0.008, 0.008, 0.06]]
+    ),
 )
 
 
@@ -60,28 +60,17 @@ def test_linear() -> None:
     member.add_distributed_load([0, 0, -50000, 0, 0, -50000], lc2)
 
     nlc1 = model.add_nonlinear_load_case_combination(
-        label="NLC1",
-        combination={
-            lc1: 1.0,
-            lc2: 1.0
-        }
+        label="NLC1", combination={lc1: 1.0, lc2: 1.0}
     )
 
     nlc2 = model.add_nonlinear_load_case_combination(
-        label="NLC2",
-        combination={
-            lc1: 0.8,
-            lc2: 0.5
-        }
+        label="NLC2", combination={lc1: 0.8, lc2: 0.5}
     )
 
-    model.add_envelope(
-        label="ENVELOPE1",
-        cases=[nlc1, nlc2]
-    )
+    model.add_envelope(label="ENVELOPE1", cases=[nlc1, nlc2])
 
     solver = PushoverSolver(model)
-    solver.solve(verbose=True, modulus_type='secant')
+    solver.solve(verbose=True, modulus_type="secant")
 
     pushover_max_moment = np.max(member.results.bending_moments_y[nlc1])
     pushover_max_deflection = np.min(member.results.translations_z[nlc1])

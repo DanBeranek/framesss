@@ -95,9 +95,7 @@ class Section:
         return self.material.elastic_modulus * self.inertia_z
 
     def EIy_moment_curvature(
-        self,
-        curvature: float,
-        modulus_type: str = 'tangent'
+        self, curvature: float, modulus_type: str = "tangent"
     ) -> float:
         """
         Return the bending stiffness about local y-axis based on MC relation.
@@ -108,35 +106,38 @@ class Section:
         if self.moment_curvature is None:
             return self.EIy
         else:
-            if modulus_type.lower() == 'secant':
+            if modulus_type.lower() == "secant":
                 return np.abs(
                     np.interp(
                         x=curvature,
                         xp=self.moment_curvature[1, :],
-                        fp=self.moment_curvature[0, :]
-                    ) / curvature
+                        fp=self.moment_curvature[0, :],
+                    )
+                    / curvature
                 )
-            if modulus_type.lower() == 'tangent':
-                idx = np.searchsorted(
-                    self.moment_curvature[1], curvature, side='left'
-                )
+            if modulus_type.lower() == "tangent":
+                idx = np.searchsorted(self.moment_curvature[1], curvature, side="left")
                 if idx == 0:
-                    raise ValueError('Curvature is less than minimum.')
+                    raise ValueError("Curvature is less than minimum.")
                 if idx == len(self.moment_curvature[1]):
-                    raise ValueError('Curvature is more than maximum.')
+                    raise ValueError("Curvature is more than maximum.")
 
-                lower_kappa = self.moment_curvature[1][idx-1]
+                lower_kappa = self.moment_curvature[1][idx - 1]
                 upper_kappa = self.moment_curvature[1][idx]
-                lower_moment = self.moment_curvature[0][idx-1]
+                lower_moment = self.moment_curvature[0][idx - 1]
                 upper_moment = self.moment_curvature[0][idx]
 
                 d_kappa = upper_kappa - lower_kappa
                 d_moment = upper_moment - lower_moment
 
                 if d_kappa == 0:
-                    raise ValueError('Zero curvature interval; cannot compute derivative.')
-                return - d_moment / d_kappa
-            raise ValueError(f"Wrong attribute 'type': '{type}'. Choose from ['secant', 'tangent'].")
+                    raise ValueError(
+                        "Zero curvature interval; cannot compute derivative."
+                    )
+                return -d_moment / d_kappa
+            raise ValueError(
+                f"Wrong attribute 'type': '{type}'. Choose from ['secant', 'tangent']."
+            )
 
 
 class PolygonalSection(Section):

@@ -93,8 +93,8 @@ class Member1D:
         self.label = label
         self.element_type = Element1DType(element_type)
         self.analysis = analysis
-        self.section = section
-        self.sections = None
+        self.section: Section | None = section
+        self.sections: dict[tuple[float, float], Section] | None = None
         self.nodes = nodes
         self.hinge_start, self.hinge_end = (BeamConnection(hng) for hng in hinges)
         self.auxiliary_vector_xy_plane = auxiliary_vector_xy_plane
@@ -194,10 +194,7 @@ class Member1D:
 
         return np.array([x, y, z])
 
-    def define_sections(
-        self,
-        sections: dict[tuple[float, float], Section]
-    ) -> None:
+    def define_sections(self, sections: dict[tuple[float, float], Section]) -> None:
         """
         Define sections along the member's length.
 
@@ -530,7 +527,9 @@ class Member1D:
                         break
                 else:
                     # Section was not found
-                    raise ValueError(f"Interval [{x_1, x_2}] does not belong to any section.")
+                    raise ValueError(
+                        f"Interval [{x_1, x_2}] does not belong to any section."
+                    )
 
             new_element = Element1D(
                 member=self,
@@ -538,7 +537,8 @@ class Member1D:
                 section=section,
                 x_start=x_1,
                 x_end=x_2,
-                hinges=hng)
+                hinges=hng,
+            )
             self.generated_elements.append(new_element)
 
     def assign_point_loads(self) -> None:

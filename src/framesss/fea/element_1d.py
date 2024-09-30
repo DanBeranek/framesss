@@ -195,7 +195,7 @@ class Element1D:
             self.member.analysis.get_element_local_stiffness_matrix(
                 self,
                 nonlinear_combination=nonlinear_combination,
-                modulus_type=modulus_type
+                modulus_type=modulus_type,
             )
         )
 
@@ -375,7 +375,7 @@ class Element1D:
         if nonlinear_combination:
             EI = self.section.EIy_moment_curvature(
                 curvature=self.curvature_xz[nonlinear_combination],
-                modulus_type=modulus_type
+                modulus_type=modulus_type,
             )
         else:
             EI = self.section.EIy
@@ -729,46 +729,25 @@ class Element1D:
         if (self.hinge_start == BeamConnection.CONTINUOUS_END) and (
             self.hinge_end == BeamConnection.CONTINUOUS_END
         ):
-            Bw1 = (
-                - 6 / (L2 * mu)
-                + 12 * x / (L3 * mu)
-            )
-            Bw2 = (
-                4 * lamb / (L * mu)
-                - 6 * x / (L2 * mu)
-            )
-            Bw3 = (
-                6 / (L2 * mu)
-                - 12 * x / (L3 * mu)
-            )
-            Bw4 = (
-                2 * gamma / (L * mu)
-                - 6 * x / (L2 * mu)
-            )
+            Bw1 = -6 / (L2 * mu) + 12 * x / (L3 * mu)
+            Bw2 = 4 * lamb / (L * mu) - 6 * x / (L2 * mu)
+            Bw3 = 6 / (L2 * mu) - 12 * x / (L3 * mu)
+            Bw4 = 2 * gamma / (L * mu) - 6 * x / (L2 * mu)
 
         elif (self.hinge_start == BeamConnection.HINGED_END) and (
             self.hinge_end == BeamConnection.CONTINUOUS_END
         ):
             Bw1 = 3 * x / (L3 * lamb)
             Bw2 = np.zeros(npoints)
-            Bw3 = - 3 * x / (L3 * lamb)
-            Bw4 = - 3 * x / (L2 * lamb)
+            Bw3 = -3 * x / (L3 * lamb)
+            Bw4 = -3 * x / (L2 * lamb)
 
         elif (self.hinge_start == BeamConnection.CONTINUOUS_END) and (
             self.hinge_end == BeamConnection.HINGED_END
         ):
-            Bw1 = (
-                - 3 / (L2 * lamb)
-                + 3 * x / (L3 * lamb)
-            )
-            Bw2 = (
-                + 3 / (L * lamb)
-                - 3 * x / (L2 * lamb)
-            )
-            Bw3 = (
-                + 3 / (L2 * lamb)
-                - 3 * x / (L3 * lamb)
-            )
+            Bw1 = -3 / (L2 * lamb) + 3 * x / (L3 * lamb)
+            Bw2 = +3 / (L * lamb) - 3 * x / (L2 * lamb)
+            Bw3 = +3 / (L2 * lamb) - 3 * x / (L3 * lamb)
             Bw4 = np.zeros(npoints)
 
         elif (self.hinge_start == BeamConnection.HINGED_END) and (
