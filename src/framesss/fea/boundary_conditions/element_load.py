@@ -169,8 +169,8 @@ class DistributedLoad(ElementLoad):
                 Omega = 0.0
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
-                EI = self.element.member.section.EIz
-                GA = self.element.member.section.GAy
+                EI = self.element.section.EIz
+                GA = self.element.section.GAy
 
                 Omega = EI / (GA * L2)
             else:
@@ -294,8 +294,8 @@ class DistributedLoad(ElementLoad):
                 Omega = 0.0
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
-                EI = self.element.member.section.EIy
-                GA = self.element.member.section.GAz
+                EI = self.element.section.EIy
+                GA = self.element.section.GAz
 
                 Omega = EI / (GA * L2)
 
@@ -414,7 +414,7 @@ class DistributedLoad(ElementLoad):
 
         # Check if transversal load is not null over member
         if fx_start or fx_end:
-            EA = self.element.member.section.EA
+            EA = self.element.section.EA
             L = self.element.length
 
             # Separate uniform portion from linear partition of axial load
@@ -449,7 +449,7 @@ class DistributedLoad(ElementLoad):
         # Check if transversal load is not null over the member
         if fy_start or fy_end:
             # Basic member properties
-            EI = self.element.member.section.EIz
+            EI = self.element.section.EIz
             L = self.element.length
 
             L2 = L * L
@@ -460,7 +460,7 @@ class DistributedLoad(ElementLoad):
                 Omega = 0.0
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
-                GA = self.element.member.section.GAy
+                GA = self.element.section.GAy
 
                 Omega = EI / (GA * L2)
 
@@ -612,7 +612,7 @@ class DistributedLoad(ElementLoad):
         # Check if transversal load is not null over the member
         if fz_start or fz_end:
             # Basic member properties
-            EI = self.element.member.section.EIy
+            EI = self.element.section.EIy
             L = self.element.length
 
             L2 = L * L
@@ -623,7 +623,7 @@ class DistributedLoad(ElementLoad):
                 Omega = 0.0
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
-                GA = self.element.member.section.GAz
+                GA = self.element.section.GAz
 
                 Omega = EI / (GA * L2)
 
@@ -797,8 +797,8 @@ class ThermalLoad(ElementLoad):
         dtx = self.temperature_gradients[0]
 
         if dtx:
-            EA = self.element.member.section.EA
-            alpha = self.element.member.section.material.thermal_expansion_coefficient
+            EA = self.element.section.EA
+            alpha = self.element.section.material.thermal_expansion_coefficient
 
             # Calculate fixed end forces
             fef_axial = np.array(
@@ -824,17 +824,17 @@ class ThermalLoad(ElementLoad):
 
         if dty:
             # Basic member properties
-            alpha = self.element.member.section.material.thermal_expansion_coefficient
-            h = self.element.member.section.height_y
+            alpha = self.element.section.material.thermal_expansion_coefficient
+            h = self.element.section.height_y
             L = self.element.length
-            EI = self.element.member.section.EIz
+            EI = self.element.section.EIz
 
             # Timoshenko parameter
             if self.element.member.element_type == Element1DType.NAVIER:
                 Omega = 0.0
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
-                GA = self.element.member.section.GAy
+                GA = self.element.section.GAy
 
                 Omega = EI / (GA * L * L)
 
@@ -909,10 +909,10 @@ class ThermalLoad(ElementLoad):
 
         if dtz:
             # Basic member properties
-            alpha = self.element.member.section.material.thermal_expansion_coefficient
-            h = self.element.member.section.height_z
+            alpha = self.element.section.material.thermal_expansion_coefficient
+            h = self.element.section.height_z
             L = self.element.length
-            EI = self.element.member.section.EIy
+            EI = self.element.section.EIy
 
             # Timoshenko parameter
             if self.element.member.element_type == Element1DType.NAVIER:
@@ -920,7 +920,7 @@ class ThermalLoad(ElementLoad):
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
 
-                GA = self.element.member.section.GAz
+                GA = self.element.section.GAz
 
                 Omega = EI / (GA * L * L)
 
@@ -1015,8 +1015,8 @@ class ThermalLoad(ElementLoad):
         # Check if temperature gradient is not null
         if dty:
             # Basic member properties
-            alpha = self.element.member.section.material.thermal_expansion_coefficient
-            h = self.element.member.section.height_y
+            alpha = self.element.section.material.thermal_expansion_coefficient
+            h = self.element.section.height_y
             L = self.element.length
 
             # Timoshenko parameter
@@ -1024,8 +1024,8 @@ class ThermalLoad(ElementLoad):
                 Omega = 0.0
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
-                EI = self.element.member.section.EIz
-                GA = self.element.member.section.GAy
+                EI = self.element.section.EIz
+                GA = self.element.section.GAy
 
                 Omega = EI / (GA * L * L)
 
@@ -1101,8 +1101,8 @@ class ThermalLoad(ElementLoad):
         # Check if temperature gradient is not null
         if dtz:
             # Basic member properties
-            alpha = self.element.member.section.material.thermal_expansion_coefficient
-            h = self.element.member.section.height_z
+            alpha = self.element.section.material.thermal_expansion_coefficient
+            h = self.element.section.height_z
             L = self.element.length
 
             # Timoshenko parameter
@@ -1110,8 +1110,8 @@ class ThermalLoad(ElementLoad):
                 Omega = 0.0
 
             elif self.element.member.element_type == Element1DType.TIMOSHENKO:
-                EI = self.element.member.section.EIy
-                GA = self.element.member.section.GAz
+                EI = self.element.section.EIy
+                GA = self.element.section.GAz
 
                 Omega = EI / (GA * L * L)
 
