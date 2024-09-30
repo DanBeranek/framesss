@@ -181,7 +181,7 @@ class EnvelopeCombination:
     :ivar cases: A list of :class:`LoadCase` and :class:`LoadCombination`.
     """
 
-    def __init__(self, label: str, cases: list[LoadCase | LoadCaseCombination]) -> None:
+    def __init__(self, label: str, cases: list[LoadCase | LoadCaseCombination | NonlinearLoadCaseCombination]) -> None:
         """Init the LoadCaseCombination class."""
         self.label = label
         self.cases = cases
@@ -190,7 +190,7 @@ class EnvelopeCombination:
         """Return a string representation of EnvelopeCombination object."""
         return f"{self.__class__.__name__}({self.label})"
 
-    def add_case(self, case: LoadCase | LoadCaseCombination) -> None:
+    def add_case(self, case: LoadCase | LoadCaseCombination | NonlinearLoadCaseCombination) -> None:
         """
         Add load case or load combination to load combination.
 

@@ -45,11 +45,11 @@ class PushoverSolver(Solver):
         # store global force vector
         f_global = copy(combination.f_global)
 
-        print(f'Solving combination {combination}')
+        # print(f'Solving combination {combination}')
 
         for i, coefficient in enumerate(np.linspace(0, 1, n_time_steps+1)[1:]):
-            print(f'Load step {i+1}')
-            print(f'{coefficient=}')
+            # print(f'Load step {i+1}')
+            # print(f'{coefficient=}')
             if i == 0:
                 self.assemble_global_stiffness_matrix()
             else:
@@ -207,18 +207,16 @@ class PushoverSolver(Solver):
 
             case.is_solved = True
 
+        for i, envelope in enumerate(self.model.envelopes):
+            if verbose:
+                print(
+                    f"{i*1 + steps_init + steps_cases + steps_combs + 1}/{n_steps}"
+                    f" : Computing internal forces for envelope: {envelope.label}..."
+                )
+            self.save_envelope_internal_forces(envelope)
+            self.save_member_internal_displacements_envelope(envelope)
+            self.save_reactions_envelope(envelope)
 
-
-        # for i, envelope in enumerate(self.model.envelopes):
-        #     if verbose:
-        #         print(
-        #             f"{i*1 + steps_init + steps_cases + steps_combs + 1}/{n_steps}"
-        #             f" : Computing internal forces for envelope: {envelope.label}..."
-        #         )
-        #     self.save_envelope_internal_forces(envelope)
-        #     self.save_member_internal_displacements_envelope(envelope)
-        #     self.save_reactions_envelope(envelope)
-        #
-        # if verbose:
-        #     print(f"{n_steps}/{n_steps} : Analysis successfully finished.")
+        if verbose:
+            print(f"{n_steps}/{n_steps} : Analysis successfully finished.")
 

@@ -59,7 +59,7 @@ def test_linear() -> None:
     # Load in [1] is applied in the negative z-direction
     member.add_distributed_load([0, 0, -50000, 0, 0, -50000], lc2)
 
-    nlc = model.add_nonlinear_load_case_combination(
+    nlc1 = model.add_nonlinear_load_case_combination(
         label="NLC1",
         combination={
             lc1: 1.0,
@@ -67,11 +67,24 @@ def test_linear() -> None:
         }
     )
 
+    nlc2 = model.add_nonlinear_load_case_combination(
+        label="NLC2",
+        combination={
+            lc1: 0.8,
+            lc2: 0.5
+        }
+    )
+
+    model.add_envelope(
+        label="ENVELOPE1",
+        cases=[nlc1, nlc2]
+    )
+
     solver = PushoverSolver(model)
     solver.solve(verbose=True, modulus_type='secant')
 
-    pushover_max_moment = np.max(member.results.bending_moments_y[nlc])
-    pushover_max_deflection = np.min(member.results.translations_z[nlc])
+    pushover_max_moment = np.max(member.results.bending_moments_y[nlc1])
+    pushover_max_deflection = np.min(member.results.translations_z[nlc1])
 
     model_linear = FrameXZModel()
     node_1 = model_linear.add_node(
