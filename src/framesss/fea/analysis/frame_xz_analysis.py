@@ -130,7 +130,8 @@ class FrameXZAnalysis(Analysis):
 
         # Compute flexural stiffness coefficients
         flexural_coefficients = element.get_flexural_xz_stiffness_coefficients(
-            nonlinear_combination=nonlinear_combination
+            nonlinear_combination=nonlinear_combination,
+            modulus_type=modulus_type
         )
         assemble_subarray_at_indices(
             kel, flexural_coefficients, self.dof_elem_flexural_xz

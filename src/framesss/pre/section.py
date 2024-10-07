@@ -118,9 +118,9 @@ class Section:
             if modulus_type.lower() == "tangent":
                 idx = np.searchsorted(self.moment_curvature[1], curvature, side="left")
                 if idx == 0:
-                    raise ValueError("Curvature is less than minimum.")
+                    return 0.0
                 if idx == len(self.moment_curvature[1]):
-                    raise ValueError("Curvature is more than maximum.")
+                    return 0.0
 
                 lower_kappa = self.moment_curvature[1][idx - 1]
                 upper_kappa = self.moment_curvature[1][idx]
