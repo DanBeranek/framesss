@@ -92,5 +92,43 @@ def test_multiple_sections() -> None:
     )
 
 
+def test_get_section() -> None:
+    section_1 = PolygonalSection(
+        label="S1",
+        points=[[0, 0], [0, 1], [1, 1], [1, 0]],
+        material=Material("M1", 200e9, 0.3, 7850, 0),
+    )
+    section_2 = PolygonalSection(
+        label="S1",
+        points=[[0, 0], [0, 0.5], [0.5, 0.5], [0.5, 0]],
+        material=Material("M1", 200e9, 0.3, 7850, 0),
+    )
+
+    model = FrameXZModel()
+    node_1 = model.add_node(
+        "N1", [0, 0, 0], ["fixed", "free", "fixed", "free", "free", "free"]
+    )
+    node_2 = model.add_node(
+        "N2", [10, 0, 0], ["free", "free", "fixed", "free", "free", "free"]
+    )
+    member_3 = model.add_member("M1", "navier", [node_1, node_2], section_1)
+
+    assert member_3.get_section(x=0.0) == section_1
+    assert member_3.get_section(x=5.0) == section_1
+    assert member_3.get_section(x=10.0) == section_1
+
+    member_3.define_sections(
+        sections={
+            (0, 5): section_1,
+            (5, 10): section_2,
+        }
+    )
+
+    assert member_3.get_section(x=0.0) == section_1
+    assert member_3.get_section(x=2.5) == section_1
+    assert member_3.get_section(x=5.0) == section_1
+    assert member_3.get_section(x=7.5) == section_2
+    assert member_3.get_section(x=10.0) == section_2
+
 
 

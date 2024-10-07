@@ -223,6 +223,26 @@ class Member1D:
         # Sort the discontinuities
         self.x_discontinuities = np.unique(self.x_discontinuities)
 
+    def get_section(self, x: float) -> Section:
+        """
+        Return the section at a specified position along the member.
+
+        :param x: The position along the member's length.
+        """
+        if self.section and self.sections is None:
+            return self.section
+
+        elif self.sections and self.section is None:
+            for (start, end), sec in self.sections.items():
+                if start <= x <= end:
+                    return sec
+            else:
+                # Section was not found
+                raise ValueError(f"Interval [{x}] does not belong to any section.")
+
+        else:
+            raise ValueError("Sections are not defined correctly.")
+
     def add_node(
         self,
         label: str,

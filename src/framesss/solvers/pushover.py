@@ -118,6 +118,7 @@ class PushoverSolver(Solver):
         self,
         verbose: bool = False,
         max_element_length: float = 0.2,
+        n_time_steps: int = 20,
         modulus_type: str = "tangent",
     ) -> None:
         """
@@ -185,7 +186,11 @@ class PushoverSolver(Solver):
                     f"{i*7 + steps_init + 3}/{n_steps}"
                     f" : Solving nonlinear combination: '{case.label}'..."
                 )
-            self.solve_load_case(case)
+            self.solve_load_case(
+                combination=case,
+                n_time_steps=n_time_steps,
+                modulus_type=modulus_type,
+            )
 
             if verbose:
                 print(
