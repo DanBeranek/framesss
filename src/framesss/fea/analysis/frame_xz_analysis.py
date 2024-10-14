@@ -671,7 +671,7 @@ class FrameXZAnalysis(Analysis):
             x=element.length / 2
         )
 
-        element.curvature_xz[combination] = float(B @ u)
+        element.curvature_xz[combination] = - float(B @ u)
 
     def save_displacements(self, node: Node, load_case: LoadCase) -> None:
         """
