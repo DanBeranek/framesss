@@ -471,10 +471,10 @@ class Member1D:
         """
         if max_element_length:
             n_nodes = int(np.ceil(self.length / max_element_length)) + 1
-            x = np.linspace(0, self.length, n_nodes)
-            self.x_discontinuities = np.unique(np.append(self.x_discontinuities, x))
-        else:
-            self.x_discontinuities = np.unique(self.x_discontinuities)
+            x = np.round(np.linspace(0, self.length, n_nodes), decimals=6)
+            self.x_discontinuities = np.append(self.x_discontinuities, x[1:-1])
+
+        self.x_discontinuities = np.unique(self.x_discontinuities)
 
         self.generate_nodes()
         self.generate_elements()
