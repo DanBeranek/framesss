@@ -228,9 +228,9 @@ class Member1D:
             )
 
         # Clamp x_interpreted within [0.0, self.length] if it's within tolerance
-        if x_interpreted < 0.0:
+        if np.isclose(x_interpreted, 0.0, atol=self.TOLERANCE):
             x_interpreted = 0.0
-        elif x_interpreted > self.length:
+        elif np.isclose(x_interpreted, self.length, atol=self.TOLERANCE):
             x_interpreted = self.length
 
         if not np.isclose(self.x_discontinuities, x_interpreted, atol=self.TOLERANCE).any():
