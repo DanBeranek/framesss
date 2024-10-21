@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     from framesss.pre.member_1d import Member1D
 
 
-COORDINATE_DEFINITIONS = [CoordinateDefinition.ABSOLUTE, CoordinateDefinition.RELATIVE]
 LOAD_COORDINATE_SYSTEMS = [LoadCoordinateSystem.LOCAL, LoadCoordinateSystem.GLOBAL]
 
 
@@ -38,8 +37,6 @@ class PointLoadOnMember:
     :param coordinate_system: The coordinate system in which the provided load
                               components are defined. Should be either 'global' or 'local',
                               as defined in :class:`LoadCoordinateSystem`.
-    :param coordinate_definition: Specifies the definition of the position. Should be either
-                                  'absolute' or 'relative' as defined in :class:`CoordinateDefinition`.
     """
 
     def __init__(
@@ -49,7 +46,6 @@ class PointLoadOnMember:
         x: float,
         load_case: LoadCase,
         coordinate_system: str | LoadCoordinateSystem,
-        coordinate_definition: str | CoordinateDefinition,
     ) -> None:
         """
         Init the PointLoadOnMember class.
@@ -58,22 +54,12 @@ class PointLoadOnMember:
         """
         self.member = member
 
-        if coordinate_definition == CoordinateDefinition.RELATIVE:
-            x *= member.length
-        elif coordinate_definition == CoordinateDefinition.ABSOLUTE:
-            pass
-        else:
-            raise ValueError(
-                f"Unknown coordinate definition: '{coordinate_definition}.'"
-                f"Valid options are: {COORDINATE_DEFINITIONS}."
-            )
-
-        if 0 <= x <= member.length:
-            self.x = x
-        else:
+        if not 0.0 <= x <= member.length:
             raise ValueError(
                 f"Position of the force is outside the beam interval: [{0, member.length}], x: '{x}'."
             )
+
+        self.x = x
 
         self.components_global, self.components_local = self.set_load_components(
             np.array(load_components), coordinate_system
@@ -165,8 +151,6 @@ class DistributedLoadOnMember:
     :param coordinate_system: The coordinate system in which the provided load
                               components are defined. Should be either 'global' or 'local',
                               as defined in :class:`LoadCoordinateSystem`.
-    :param coordinate_definition: Specifies the definition of the position. Should be either
-                                  'absolute' or 'relative' as defined in :class:`CoordinateDefinition`.
     :param location: Specifies whether the load is acting directly on an inclined 1D member,
                      or on the projection into the global coordinate system.
                      For 'local' coordinate_system, the only option is 'length'.
@@ -184,7 +168,6 @@ class DistributedLoadOnMember:
         load_case: LoadCase,
         coordinate_system: str | LoadCoordinateSystem,
         location: str | DistributedLoadLocation,
-        coordinate_definition: str | CoordinateDefinition,
     ) -> None:
         """
         Init the DistributedLoadOnMember class.
@@ -192,17 +175,6 @@ class DistributedLoadOnMember:
         :raises ValueError: If the position 'x' is outside the interval of the member's length.
         """
         self.member = member
-
-        if coordinate_definition == CoordinateDefinition.RELATIVE:
-            x_start *= member.length
-            x_end *= member.length
-        elif coordinate_definition == CoordinateDefinition.ABSOLUTE:
-            pass
-        else:
-            raise ValueError(
-                f"Unknown coordinate definition: '{coordinate_definition}.'"
-                f"Valid options are: {COORDINATE_DEFINITIONS}."
-            )
 
         if x_start > x_end:
             raise ValueError(
@@ -214,17 +186,17 @@ class DistributedLoadOnMember:
                 f"Position of the start point is equal to the position of the end point: "
                 f"'{x_start}' == '{x_end}'"
             )
-        elif not 0 <= x_start <= member.length:
+        elif not 0.0 <= x_start <= member.length:
             raise ValueError(
                 f"Position of the start point is outside of the beam interval: "
                 f"[{0, member.length}], x: '{x_start}'."
             )
-        elif not 0 <= x_end <= member.length:
+        elif not 0.0 <= x_end <= member.length:
             raise ValueError(
                 f"Position of the end point is outside of the beam interval: "
                 f"[{0, member.length}], x: '{x_end}'."
             )
-        elif 0 <= x_start <= x_end <= member.length:
+        elif 0.0 <= x_start <= x_end <= member.length:
             self.x_start = x_start
             self.x_end = x_end
         else:
@@ -366,8 +338,6 @@ class ThermalLoadOnMember:
                   This value should be within the member's length.
     :param load_case: A reference to an instance of the :class:`LoadCase` class, representing
                       the load case to which this force belongs.
-    :param coordinate_definition: Specifies the definition of the position. Should be either
-                                  'absolute' or 'relative' as defined in :class:`CoordinateDefinition`.
     """
 
     def __init__(
@@ -377,7 +347,6 @@ class ThermalLoadOnMember:
         x_start: float,
         x_end: float,
         load_case: LoadCase,
-        coordinate_definition: str | CoordinateDefinition,
     ) -> None:
         """
         Init the ThermalLoadOnMember class.
@@ -385,17 +354,6 @@ class ThermalLoadOnMember:
         :raises ValueError: If the position 'x' is outside the interval of the member's length.
         """
         self.member = member
-
-        if coordinate_definition == CoordinateDefinition.RELATIVE:
-            x_start *= member.length
-            x_end *= member.length
-        elif coordinate_definition == CoordinateDefinition.ABSOLUTE:
-            pass
-        else:
-            raise ValueError(
-                f"Unknown coordinate definition: '{coordinate_definition}.'"
-                f"Valid options are: {COORDINATE_DEFINITIONS}."
-            )
 
         if x_start > x_end:
             raise ValueError(

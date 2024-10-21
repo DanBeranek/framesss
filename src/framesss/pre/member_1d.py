@@ -31,6 +31,8 @@ if TYPE_CHECKING:
 MAX_DISTANCE_BETWEEN_SAMPLING_POINTS = 0.1  # (m)
 NUMERIC_GARBAGE = 1.0e-12
 
+COORDINATE_DEFINITIONS = [CoordinateDefinition.ABSOLUTE, CoordinateDefinition.RELATIVE]
+
 
 def cross(
     x: npt.NDArray[np.float64], y: npt.NDArray[np.float64]
@@ -77,6 +79,8 @@ class Member1D:
     :ivar x_discontinuities: Positions along the member length where discontinuities (e.g., changes in loading) occur.
     :ivar results: An object to store analysis results related to the member.
     """
+
+    TOLERANCE = 1e-6
 
     def __init__(
         self,
@@ -194,6 +198,46 @@ class Member1D:
 
         return np.array([x, y, z])
 
+    def _add_x_discontinuity(
+        self,
+        x: float,
+        coordinate_definition: str | CoordinateDefinition = CoordinateDefinition.RELATIVE,
+    ) -> float:
+        """
+        Helper method to append an x value to the x_discontinuities array if it's not already present within a tolerance.
+
+        :param x: The x value to be added to the discontinuities array.
+        :param coordinate_definition: Defines how the position 'x' is interpreted, either
+                                        as 'relative' to the member's length or as an 'absolute'.
+        :return: The exact x value that was added to the discontinuities array.
+        """
+        if coordinate_definition == CoordinateDefinition.RELATIVE:
+            x_interpreted = x * self.length
+        elif coordinate_definition == CoordinateDefinition.ABSOLUTE:
+            x_interpreted = x
+        else:
+            raise ValueError(
+                f"Unknown coordinate definition: '{coordinate_definition}.'"
+                f"Valid options are: {COORDINATE_DEFINITIONS}."
+            )
+
+        # Validate that x_interpreted is withing the member's interval with tolerance
+        if not (-self.TOLERANCE <= x_interpreted <= self.length + self.TOLERANCE):
+            raise ValueError(
+                f"Position of the x is outside the beam interval: [{0, self.length}], x: '{x_interpreted}'."
+            )
+
+        # Clamp x_interpreted within [0.0, self.length] if it's within tolerance
+        if x_interpreted < 0.0:
+            x_interpreted = 0.0
+        elif x_interpreted > self.length:
+            x_interpreted = self.length
+
+        if not np.isclose(self.x_discontinuities, x_interpreted, atol=self.TOLERANCE).any():
+            self.x_discontinuities = np.append(self.x_discontinuities, x_interpreted)
+
+        return x_interpreted
+
     def define_sections(self, sections: dict[tuple[float, float], Section]) -> None:
         """
         Define sections along the member's length.
@@ -205,20 +249,32 @@ class Member1D:
 
         :param sections: A dictionary mapping tuples of start and end positions to :class:`Section` objects.
         """
+        # Extract original start and end positions
+        original_keys = list(sections.keys())
+        original_sections = list(sections.values())
+
+        original_x_start = original_keys[0][0]
+        original_x_end = original_keys[-1][1]
+
         # Validate that the sections cover the entire member length
-        if not np.isclose(list(sections.keys())[0][0], 0.0):
-            raise ValueError("The first section must start at position 0.0")
-        if not np.isclose(list(sections.keys())[-1][1], self.length):
-            raise ValueError("The last section must end at the member's length")
+        if not np.isclose(original_x_start, 0.0, atol=self.TOLERANCE):
+            raise ValueError("The first section must start at 'x=0.0'")
+        if not np.isclose(original_x_end, self.length, atol=self.TOLERANCE):
+            raise ValueError(f"The last section must end at the member's length, 'x={self.length}'")
 
-        # Assign the sections to the member
-        self.sections = sections
+        # Initialize new dictionary that hold updated sections with exact x values
+        updated_sections = {}
+
+        # Iterate over the original sections and update the start and end positions
+        for (start, end), section in zip(original_keys, original_sections):
+            exact_start = self._add_x_discontinuity(x=start, coordinate_definition=CoordinateDefinition.ABSOLUTE)
+            exact_end = self._add_x_discontinuity(x=end, coordinate_definition=CoordinateDefinition.ABSOLUTE)
+
+            updated_sections[(exact_start, exact_end)] = section
+
+        # Assign updated sections to the member
+        self.sections = updated_sections
         self.section = None
-
-        # Add x values to x discontinuities
-        for start, end in sections.keys():
-            self.x_discontinuities = np.append(self.x_discontinuities, start)
-            self.x_discontinuities = np.append(self.x_discontinuities, end)
 
         # Sort the discontinuities
         self.x_discontinuities = np.unique(self.x_discontinuities)
@@ -234,14 +290,44 @@ class Member1D:
 
         elif self.sections and self.section is None:
             for (start, end), sec in self.sections.items():
-                if start <= x <= end:
+                if start - self.TOLERANCE <= x <= end + self.TOLERANCE:
                     return sec
             else:
                 # Section was not found
-                raise ValueError(f"Interval [{x}] does not belong to any section.")
+                raise ValueError(f"Section at 'x={x}' does not belong to any section.")
 
         else:
             raise ValueError("Sections are not defined correctly.")
+
+    def _get_x_local(self, node: Node) -> float:
+        """
+        Calculate the local x-coordinate of a node by projecting it's global coordinates onto the member's local axis.
+
+        :param node: Node for which to calculate the local x-coordinate.
+        :return: The local x-coordinate of the node.
+        """
+        vector = np.array(node.coords) - np.array(self.nodes[0].coords)
+        local_x_unit_axis = self.direction_cosine_matrix[0]
+        return np.dot(vector, local_x_unit_axis)
+
+    def _sort_nodes(self) -> None:
+        """
+        Sort the member's nodes based on their local x-coordinates.
+        """
+        if len(self.nodes) < 2:
+            # No internal nodes to sort
+            return
+
+        # Extract internal nodes
+        internal_nodes = self.nodes[1:-1]
+
+        # Sort them based on x_local
+        internal_nodes_sorted = sorted(
+            internal_nodes, key=lambda node: self._get_x_local(node)
+        )
+
+        # Reconstruct the nodes list
+        self.nodes = [self.nodes[0]] + internal_nodes_sorted + [self.nodes[-1]]
 
     def add_node(
         self,
@@ -282,13 +368,10 @@ class Member1D:
         spring_stiff = [stiff for stiff in spring_stiffness]
         coord_def = CoordinateDefinition(coordinate_definition)
 
-        if coord_def == CoordinateDefinition.RELATIVE:
-            x *= self.length
-
-        self.x_discontinuities = np.append(self.x_discontinuities, x)
+        x_exact = self._add_x_discontinuity(x=x, coordinate_definition=coord_def)
 
         coords = self.nodes[0].coords + self.direction_cosine_matrix.T @ np.array(
-            [x, 0, 0]
+            [x_exact, 0, 0]
         )
 
         new_node = Node(
@@ -299,11 +382,9 @@ class Member1D:
             is_user_defined=True,
         )
 
-        self.x_user_defined_nodes = np.sort(np.append(self.x_user_defined_nodes, x))
-
-        idx = np.where(x == self.x_user_defined_nodes)[0][0]
-
-        self.nodes.insert(idx, new_node)
+        self.x_user_defined_nodes = np.sort(np.append(self.x_user_defined_nodes, x_exact))
+        self.nodes.insert(1, new_node)
+        self._sort_nodes()
 
         return new_node
 
@@ -341,15 +422,16 @@ class Member1D:
                                       value. Can be an instance of :class:`CoordinateDefinition`.
                                       Default to ``RELATIVE``.
         """
+        x_exact = self._add_x_discontinuity(x=x, coordinate_definition=coordinate_definition)
+
         new_load = PointLoadOnMember(
-            self,
-            load_components,
-            x,
-            load_case,
-            coordinate_system,
-            coordinate_definition,
+            member=self,
+            load_components=load_components,
+            x=x_exact,
+            load_case=load_case,
+            coordinate_system=coordinate_system,
         )
-        self.x_discontinuities = np.append(self.x_discontinuities, new_load.x)
+
         self.point_loads.append(new_load)
 
     def add_distributed_load(
@@ -391,18 +473,19 @@ class Member1D:
                                       value. Can be an instance of :class:`CoordinateDefinition`.
                                       Default to ``RELATIVE``.
         """
+        x_exact_start = self._add_x_discontinuity(x=x_start, coordinate_definition=coordinate_definition)
+        x_exact_end = self._add_x_discontinuity(x=x_end, coordinate_definition=coordinate_definition)
+
         new_udl = DistributedLoadOnMember(
-            self,
-            load_components,
-            x_start,
-            x_end,
-            load_case,
-            coordinate_system,
-            location,
-            coordinate_definition,
+            member=self,
+            load_components=load_components,
+            x_start=x_exact_start,
+            x_end=x_exact_end,
+            load_case=load_case,
+            coordinate_system=coordinate_system,
+            location=location,
         )
-        self.x_discontinuities = np.append(self.x_discontinuities, new_udl.x_start)
-        self.x_discontinuities = np.append(self.x_discontinuities, new_udl.x_end)
+
         self.distributed_loads.append(new_udl)
 
     def add_thermal_load(
@@ -434,20 +517,17 @@ class Member1D:
                                       value. Can be an instance of :class:`CoordinateDefinition`.
                                       Default to ``RELATIVE``.
         """
+        x_exact_start = self._add_x_discontinuity(x=x_start, coordinate_definition=coordinate_definition)
+        x_exact_end = self._add_x_discontinuity(x=x_end, coordinate_definition=coordinate_definition)
+
         new_thermal_load = ThermalLoadOnMember(
-            self,
-            temperature_gradients,
-            x_start,
-            x_end,
-            load_case,
-            coordinate_definition,
+            member=self,
+            temperature_gradients=temperature_gradients,
+            x_start=x_exact_start,
+            x_end=x_exact_end,
+            load_case=load_case,
         )
-        self.x_discontinuities = np.append(
-            self.x_discontinuities, new_thermal_load.x_start
-        )
-        self.x_discontinuities = np.append(
-            self.x_discontinuities, new_thermal_load.x_end
-        )
+
         self.thermal_loads.append(new_thermal_load)
 
     def discretize(self, model: Model, max_element_length: None | float = None) -> None:
@@ -471,8 +551,9 @@ class Member1D:
         """
         if max_element_length:
             n_nodes = int(np.ceil(self.length / max_element_length)) + 1
-            x = np.round(np.linspace(0, self.length, n_nodes), decimals=6)
-            self.x_discontinuities = np.append(self.x_discontinuities, x[1:-1])
+            x_values = np.linspace(0, self.length, n_nodes)
+            for xi in x_values[1:-1]:
+                self._add_x_discontinuity(xi, CoordinateDefinition.ABSOLUTE)
 
         self.x_discontinuities = np.unique(self.x_discontinuities)
 
