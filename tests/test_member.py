@@ -158,6 +158,13 @@ def test_floating_point_precision():
         coordinate_definition=CoordinateDefinition.ABSOLUTE,
     )
 
+    for i, length in enumerate(lengths):
+        members[i].define_sections(
+            sections={
+                (0, length): section,
+            }
+        )
+
     solver = LinearStaticSolver(model=model)
     solver.solve()
 
@@ -172,3 +179,8 @@ def test_floating_point_precision():
     assert members[3].distributed_loads[0].x_end == 3.8000000000000007
     assert len(members[3].generated_elements) == 2
     assert len(members[3].generated_nodes) == 3
+
+    assert members[0].sections == {(0, 5.8): section}
+    assert members[1].sections == {(0, 4.000000000000001): section}
+    assert members[2].sections == {(0, 3.6999999999999993): section}
+    assert members[3].sections == {(0, 3.8000000000000007): section}
